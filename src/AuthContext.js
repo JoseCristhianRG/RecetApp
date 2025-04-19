@@ -7,10 +7,13 @@ import {
   signOut
 } from 'firebase/auth';
 import { Navigate } from 'react-router-dom';
+import { db } from './firebase';
+import { getDoc, doc as docRef } from 'firebase/firestore';
 
 // Context for authentication state and methods
 export const AuthContext = createContext({
   user: null,
+  userRole: null,
   signup: async () => {},
   signin: async () => {},
   signout: async () => {},
@@ -18,10 +21,24 @@ export const AuthContext = createContext({
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
+  const [userRole, setUserRole] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       setUser(firebaseUser);
+      if (firebaseUser) {
+        // Obtener el rol del usuario desde Firestore
+        try {
+          const snap = await getDoc(docRef(db, 'users', firebaseUser.uid));
+          setUserRole(snap.data()?.role || null);
+        } catch {
+          setUserRole(null);
+        }
+      } else {
+        setUserRole(null);
+      }
+      setLoading(false);
     });
     return unsubscribe;
   }, []);
@@ -32,18 +49,24 @@ export function AuthProvider({ children }) {
     signInWithEmailAndPassword(auth, email, password);
   const signout = () => signOut(auth);
 
+  if (loading) return <div>Cargando sesión...</div>;
+
   return (
-    <AuthContext.Provider value={{ user, signup, signin, signout }}>
+    <AuthContext.Provider value={{ user, userRole, signup, signin, signout }}>
       {children}
     </AuthContext.Provider>
   );
 }
 
 // Component to require authentication for routes
-export function RequireAuth({ children }) {
-  const { user } = useContext(AuthContext);
+export function RequireAuth({ children, requiredRole }) {
+  const { user, userRole } = useContext(AuthContext);
+  // Check if user is authenticated
   if (!user) {
     return <Navigate to="/login" replace />;
+  }
+  if (requiredRole && userRole !== requiredRole) {
+    return <div>No autorizado</div>;
   }
   return children;
 }
