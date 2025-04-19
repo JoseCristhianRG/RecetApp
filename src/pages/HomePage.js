@@ -23,7 +23,7 @@ function HomePage() {
   }, []);
 
   return (
-    <div>
+    <div className="p-6 py-3">
       <h2 className="text-xl font-bold mb-4">Últimas recetas añadidas</h2>
       <ul className="grid grid-cols-1 gap-3">
         {latestRecipes.map((recipe) => (

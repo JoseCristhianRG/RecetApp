@@ -45,8 +45,8 @@ function App() {
                 </div>
               </nav>
               {/* Card general blanco */}
-              <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 mb-4">
-                <div className="py-2 sm:py-4">
+              <div className="bg-white rounded-xl shadow-lg">
+                <div className="">
                   <Routes>
                     <Route path="/login" element={<LoginPage />} />
                     <Route path="/signup" element={<SignupPage />} />

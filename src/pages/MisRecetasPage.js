@@ -11,7 +11,7 @@ function MisRecetasPage() {
   const myRecipes = recipes.filter(r => r.createdBy === user?.uid);
 
   return (
-    <div>
+    <div className="p-6 py-3">
       <h1 className="text-2xl font-bold mb-4">Mis Recetas</h1>
       {myRecipes.length === 0 ? (
         <p>No has creado ninguna receta aún.</p>
@@ -23,7 +23,9 @@ function MisRecetasPage() {
                 {recipe.imageUrl && (
                   <img src={recipe.imageUrl} alt={recipe.name} className="w-12 h-12 object-cover rounded-full mr-3 border-2 border-pantonebrown" />
                 )}
-                <span className="text-lg font-bold text-pantoneblack">{recipe.name}</span>
+                <Link to={`/recipe/${recipe.id}`} className="text-lg font-bold text-pantoneblack hover:underline">
+                  {recipe.name}
+                </Link>
               </div>
               <div className="flex gap-2">
                 <button

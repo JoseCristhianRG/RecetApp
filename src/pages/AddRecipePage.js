@@ -1,6 +1,6 @@
 import React, { useState, useContext } from 'react';
-import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
-import { db } from '../firebase';
+import { addDoc, collection, serverTimestamp, updateDoc } from 'firebase/firestore';
+import { db, uploadImage } from '../firebase';
 import { CategoriesContext } from '../CategoriesContext';
 import { AuthContext } from '../AuthContext';
 import { Switch } from '@headlessui/react';
@@ -35,20 +35,53 @@ function AddRecipePage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validate()) return;
-    let imageBase64 = '';
+    let imageUrl = '';
     if (image) {
-      imageBase64 = await new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onloadend = () => resolve(reader.result);
-        reader.onerror = reject;
-        reader.readAsDataURL(image);
+      // Subir imagen principal a recipes/ID_RECETA/imagen.png
+      const tempId = Date.now().toString(); // id temporal para crear la receta y obtener el id real
+      const tempRecipeRef = await addDoc(collection(db, 'recipes'), { name: 'temp', createdAt: serverTimestamp() });
+      const recipeId = tempRecipeRef.id;
+      await updateDoc(tempRecipeRef, { name }); // actualiza el nombre real
+      imageUrl = await uploadImage(image, `recipes/${recipeId}/imagen.png`);
+      await updateDoc(tempRecipeRef, { imageUrl });
+      // Guardar el resto de los datos
+      await updateDoc(tempRecipeRef, {
+        category,
+        ingredients,
+        createdBy: user?.uid || null,
+        isPublic,
+        status,
+        publishedAt: status === 'published' ? serverTimestamp() : null,
+        tags,
       });
+      // Guardar pasos en la colección steps
+      for (let i = 0; i < steps.length; i++) {
+        let stepImageUrl = '';
+        if (steps[i].image) {
+          stepImageUrl = await uploadImage(steps[i].image, `steps/${recipeId}`);
+        }
+        await addDoc(collection(db, 'steps'), {
+          recipeId: recipeId,
+          order: i,
+          title: steps[i].title,
+          description: steps[i].description,
+          imageUrl: stepImageUrl,
+        });
+      }
+      setName('');
+      setCategory('');
+      setIngredients(['']);
+      setSteps([{ title: '', description: '', image: null }]);
+      setImage(null);
+      setErrors({});
+      setTags([]);
+      return;
     }
     const recipeData = {
       name,
       category,
       ingredients,
-      imageUrl: imageBase64,
+      imageUrl,
       createdBy: user?.uid || null,
       createdAt: serverTimestamp(),
       isPublic,
@@ -59,21 +92,16 @@ function AddRecipePage() {
     const recipeRef = await addDoc(collection(db, 'recipes'), recipeData);
     // Guardar pasos en la colección steps
     for (let i = 0; i < steps.length; i++) {
-      let stepImageBase64 = '';
+      let stepImageUrl = '';
       if (steps[i].image) {
-        stepImageBase64 = await new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onloadend = () => resolve(reader.result);
-          reader.onerror = reject;
-          reader.readAsDataURL(steps[i].image);
-        });
+        stepImageUrl = await uploadImage(steps[i].image, `steps/${recipeRef.id}`);
       }
       await addDoc(collection(db, 'steps'), {
         recipeId: recipeRef.id,
         order: i,
         title: steps[i].title,
         description: steps[i].description,
-        imageUrl: stepImageBase64,
+        imageUrl: stepImageUrl,
       });
     }
     setName('');
@@ -98,165 +126,167 @@ function AddRecipePage() {
   };
 
   return (
-    <div className="max-w-md md:max-w-2xl xl:max-w-4xl mx-auto bg-white p-6 rounded shadow">
-      <h1 className="text-2xl font-bold mb-4">Agregar Receta</h1>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <input
-            type="text"
-            placeholder="Nombre de la receta"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className={`w-full p-2 border rounded ${errors.name ? 'border-red-500' : ''}`}
-          />
-          {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
-        </div>
-        <div>
-          <select
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-            className={`w-full p-2 border rounded ${errors.category ? 'border-red-500' : ''}`}
-          >
-            <option value="">Selecciona una categoría</option>
-            {categories.map((cat) => (
-              <option key={cat.id} value={cat.name}>{cat.name}</option>
-            ))}
-          </select>
-          {errors.category && <p className="text-red-500 text-xs mt-1">{errors.category}</p>}
-        </div>
-        <div>
-          <label className="block font-medium mb-1">Ingredientes</label>
-          {ingredients.map((ing, idx) => (
-            <div key={idx} className="flex gap-2 mb-1">
-              <input
-                type="text"
-                value={ing}
-                onChange={(e) => {
-                  const newIngs = [...ingredients];
-                  newIngs[idx] = e.target.value;
-                  setIngredients(newIngs);
-                }}
-                className={`flex-1 p-2 border rounded ${errors.ingredients ? 'border-red-500' : ''}`}
-              />
-              {ingredients.length > 1 && (
-                <button type="button" onClick={() => setIngredients(ingredients.filter((_, i) => i !== idx))} className="px-2 text-red-600">✕</button>
-              )}
-            </div>
-          ))}
-          <button type="button" onClick={() => setIngredients([...ingredients, ''])} className="text-xs text-pantonegreen underline">Agregar ingrediente</button>
-          {errors.ingredients && <p className="text-red-500 text-xs mt-1">{errors.ingredients}</p>}
-        </div>
-        <div>
-          <label className="block font-medium mb-1">Pasos</label>
-          {steps.map((step, idx) => (
-            <div key={idx} className="mb-3 p-2 border rounded bg-gray-50">
-              <input
-                type="text"
-                placeholder="Nombre del paso"
-                value={step.title}
-                onChange={e => {
-                  const newSteps = [...steps];
-                  newSteps[idx].title = e.target.value;
-                  setSteps(newSteps);
-                }}
-                className={`w-full p-2 border rounded mb-1 ${errors.steps ? 'border-red-500' : ''}`}
-              />
-              <textarea
-                placeholder="Descripción del paso"
-                value={step.description}
-                onChange={e => {
-                  const newSteps = [...steps];
-                  newSteps[idx].description = e.target.value;
-                  setSteps(newSteps);
-                }}
-                className={`w-full p-2 border rounded mb-1 ${errors.stepsDesc ? 'border-red-500' : ''}`}
-              />
-              <input
-                type="file"
-                onChange={e => {
-                  const newSteps = [...steps];
-                  newSteps[idx].image = e.target.files[0];
-                  setSteps(newSteps);
-                }}
-                className="w-full p-2 border rounded mb-1"
-              />
-              {steps.length > 1 && (
-                <button type="button" onClick={() => setSteps(steps.filter((_, i) => i !== idx))} className="text-xs text-red-600">Eliminar paso</button>
-              )}
-            </div>
-          ))}
-          <button type="button" onClick={() => setSteps([...steps, { title: '', description: '', image: null }])} className="text-xs text-pantonegreen underline">Agregar paso</button>
-          {(errors.steps || errors.stepsDesc) && <p className="text-red-500 text-xs mt-1">{errors.steps || errors.stepsDesc}</p>}
-        </div>
-        <div>
-          <input
-            type="file"
-            onChange={(e) => setImage(e.target.files[0])}
-            className="w-full p-2 border rounded"
-          />
-        </div>
-        <div>
-          <label className="block font-medium mb-1">Visibilidad</label>
-          <Switch
-            checked={isPublic}
-            onChange={setIsPublic}
-            className={`${isPublic ? 'bg-pantonegreen' : 'bg-pantonebrown'} relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none`}
-          >
-            <span className="sr-only">Pública</span>
-            <span
-              className={`${isPublic ? 'translate-x-6' : 'translate-x-1'} inline-block h-4 w-4 transform rounded-full bg-white transition-transform`}
-            />
-          </Switch>
-          <span className="ml-3 text-sm font-medium">{isPublic ? 'Pública' : 'Privada'}</span>
-        </div>
-        <div>
-          <label className="block font-medium mb-1">Estado</label>
-          <Switch
-            checked={status === 'published'}
-            onChange={v => setStatus(v ? 'published' : 'draft')}
-            className={`${status === 'published' ? 'bg-blue-600' : 'bg-pantoneyellow'} relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none`}
-          >
-            <span className="sr-only">Publicada</span>
-            <span
-              className={`${status === 'published' ? 'translate-x-6' : 'translate-x-1'} inline-block h-4 w-4 transform rounded-full bg-white transition-transform`}
-            />
-          </Switch>
-          <span className="ml-3 text-sm font-medium">{status === 'published' ? 'Publicada' : 'Borrador'}</span>
-        </div>
-        <div>
-          <label className="block font-medium mb-1">Etiquetas</label>
-          <div className="flex gap-2 mb-2">
+    <div className="p-6 py-3">
+      <div className="max-w-md md:max-w-2xl xl:max-w-4xl mx-auto bg-white p-6 rounded shadow">
+        <h1 className="text-2xl font-bold mb-4">Agregar Receta</h1>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
             <input
               type="text"
-              value={tagInput}
-              onChange={e => setTagInput(e.target.value)}
-              className="flex-1 p-2 border rounded"
-              placeholder="Añadir etiqueta"
-              onKeyDown={e => {
-                if (e.key === 'Enter') {
-                  e.preventDefault();
-                  handleAddTag();
-                }
-              }}
+              placeholder="Nombre de la receta"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className={`w-full p-2 border rounded ${errors.name ? 'border-red-500' : ''}`}
             />
-            <button type="button" onClick={handleAddTag} className="px-3 py-1 bg-pantonegreen text-white rounded">Agregar</button>
+            {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
           </div>
-          <div className="flex flex-wrap gap-2">
-            {tags.map(tag => (
-              <span key={tag} className="bg-pantoneyellow text-pantoneblack px-2 py-1 rounded text-xs flex items-center gap-1">
-                {tag}
-                <button type="button" onClick={() => handleRemoveTag(tag)} className="text-pantonebrown font-bold ml-1">×</button>
-              </span>
+          <div>
+            <select
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              className={`w-full p-2 border rounded ${errors.category ? 'border-red-500' : ''}`}
+            >
+              <option value="">Selecciona una categoría</option>
+              {categories.map((cat) => (
+                <option key={cat.id} value={cat.name}>{cat.name}</option>
+              ))}
+            </select>
+            {errors.category && <p className="text-red-500 text-xs mt-1">{errors.category}</p>}
+          </div>
+          <div>
+            <label className="block font-medium mb-1">Ingredientes</label>
+            {ingredients.map((ing, idx) => (
+              <div key={idx} className="flex gap-2 mb-1">
+                <input
+                  type="text"
+                  value={ing}
+                  onChange={(e) => {
+                    const newIngs = [...ingredients];
+                    newIngs[idx] = e.target.value;
+                    setIngredients(newIngs);
+                  }}
+                  className={`flex-1 p-2 border rounded ${errors.ingredients ? 'border-red-500' : ''}`}
+                />
+                {ingredients.length > 1 && (
+                  <button type="button" onClick={() => setIngredients(ingredients.filter((_, i) => i !== idx))} className="px-2 text-red-600">✕</button>
+                )}
+              </div>
             ))}
+            <button type="button" onClick={() => setIngredients([...ingredients, ''])} className="text-xs text-pantonegreen underline">Agregar ingrediente</button>
+            {errors.ingredients && <p className="text-red-500 text-xs mt-1">{errors.ingredients}</p>}
           </div>
-        </div>
-        <button
-          type="submit"
-          className="px-4 py-2 bg-blue-600 text-white rounded shadow hover:bg-blue-700 transition w-full"
-        >
-          Agregar receta
-        </button>
-      </form>
+          <div>
+            <label className="block font-medium mb-1">Pasos</label>
+            {steps.map((step, idx) => (
+              <div key={idx} className="mb-3 p-2 border rounded bg-gray-50">
+                <input
+                  type="text"
+                  placeholder="Nombre del paso"
+                  value={step.title}
+                  onChange={e => {
+                    const newSteps = [...steps];
+                    newSteps[idx].title = e.target.value;
+                    setSteps(newSteps);
+                  }}
+                  className={`w-full p-2 border rounded mb-1 ${errors.steps ? 'border-red-500' : ''}`}
+                />
+                <textarea
+                  placeholder="Descripción del paso"
+                  value={step.description}
+                  onChange={e => {
+                    const newSteps = [...steps];
+                    newSteps[idx].description = e.target.value;
+                    setSteps(newSteps);
+                  }}
+                  className={`w-full p-2 border rounded mb-1 ${errors.stepsDesc ? 'border-red-500' : ''}`}
+                />
+                <input
+                  type="file"
+                  onChange={e => {
+                    const newSteps = [...steps];
+                    newSteps[idx].image = e.target.files[0];
+                    setSteps(newSteps);
+                  }}
+                  className="w-full p-2 border rounded mb-1"
+                />
+                {steps.length > 1 && (
+                  <button type="button" onClick={() => setSteps(steps.filter((_, i) => i !== idx))} className="text-xs text-red-600">Eliminar paso</button>
+                )}
+              </div>
+            ))}
+            <button type="button" onClick={() => setSteps([...steps, { title: '', description: '', image: null }])} className="text-xs text-pantonegreen underline">Agregar paso</button>
+            {(errors.steps || errors.stepsDesc) && <p className="text-red-500 text-xs mt-1">{errors.steps || errors.stepsDesc}</p>}
+          </div>
+          <div>
+            <input
+              type="file"
+              onChange={(e) => setImage(e.target.files[0])}
+              className="w-full p-2 border rounded"
+            />
+          </div>
+          <div>
+            <label className="block font-medium mb-1">Visibilidad</label>
+            <Switch
+              checked={isPublic}
+              onChange={setIsPublic}
+              className={`${isPublic ? 'bg-pantonegreen' : 'bg-pantonebrown'} relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none`}
+            >
+              <span className="sr-only">Pública</span>
+              <span
+                className={`${isPublic ? 'translate-x-6' : 'translate-x-1'} inline-block h-4 w-4 transform rounded-full bg-white transition-transform`}
+              />
+            </Switch>
+            <span className="ml-3 text-sm font-medium">{isPublic ? 'Pública' : 'Privada'}</span>
+          </div>
+          <div>
+            <label className="block font-medium mb-1">Estado</label>
+            <Switch
+              checked={status === 'published'}
+              onChange={v => setStatus(v ? 'published' : 'draft')}
+              className={`${status === 'published' ? 'bg-blue-600' : 'bg-pantoneyellow'} relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none`}
+            >
+              <span className="sr-only">Publicada</span>
+              <span
+                className={`${status === 'published' ? 'translate-x-6' : 'translate-x-1'} inline-block h-4 w-4 transform rounded-full bg-white transition-transform`}
+              />
+            </Switch>
+            <span className="ml-3 text-sm font-medium">{status === 'published' ? 'Publicada' : 'Borrador'}</span>
+          </div>
+          <div>
+            <label className="block font-medium mb-1">Etiquetas</label>
+            <div className="flex gap-2 mb-2">
+              <input
+                type="text"
+                value={tagInput}
+                onChange={e => setTagInput(e.target.value)}
+                className="flex-1 p-2 border rounded"
+                placeholder="Añadir etiqueta"
+                onKeyDown={e => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleAddTag();
+                  }
+                }}
+              />
+              <button type="button" onClick={handleAddTag} className="px-3 py-1 bg-pantonegreen text-white rounded">Agregar</button>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {tags.map(tag => (
+                <span key={tag} className="bg-pantoneyellow text-pantoneblack px-2 py-1 rounded text-xs flex items-center gap-1">
+                  {tag}
+                  <button type="button" onClick={() => handleRemoveTag(tag)} className="text-pantonebrown font-bold ml-1">×</button>
+                </span>
+              ))}
+            </div>
+          </div>
+          <button
+            type="submit"
+            className="px-4 py-2 bg-blue-600 text-white rounded shadow hover:bg-blue-700 transition w-full"
+          >
+            Agregar receta
+          </button>
+        </form>
+      </div>
     </div>
   );
 }
