@@ -1,57 +1,166 @@
 import React, { useState, useContext } from 'react';
 import { IngredientsContext } from '../IngredientsContext';
+import { addDoc, collection, doc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { db } from '../firebase';
+import Modal from '../components/Modal';
 
 function IngredientsPage() {
-  const { ingredients, addIngredient } = useContext(IngredientsContext);
-  const [newIngredient, setNewIngredient] = useState('');
+  const { ingredients } = useContext(IngredientsContext);
+  const [name, setName] = useState('');
+  const [image, setImage] = useState(null);
+  const [editingId, setEditingId] = useState(null); // ID del ingrediente que se está editando
+  const [modal, setModal] = useState({ open: false, title: '', message: '', onConfirm: null });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (newIngredient.trim()) {
-      try {
-        await addIngredient(newIngredient);
-        setNewIngredient('');
-      } catch (err) {
-        console.error('Error al agregar ingrediente:', err);
-      }
+    if (!name.trim()) {
+      setModal({
+        open: true,
+        title: 'Campo obligatorio',
+        message: 'El nombre del ingrediente es obligatorio.',
+        onConfirm: null
+      });
+      return;
     }
+    let imageBase64 = '';
+    if (image) {
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        imageBase64 = reader.result;
+        if (editingId) {
+          // Actualizar ingrediente existente
+          await updateDoc(doc(db, 'ingredients', editingId), {
+            name,
+            image: imageBase64,
+          });
+        } else {
+          // Agregar nuevo ingrediente
+          await addDoc(collection(db, 'ingredients'), {
+            name,
+            image: imageBase64,
+          });
+        }
+        resetForm();
+      };
+      reader.readAsDataURL(image);
+    } else {
+      if (editingId) {
+        await updateDoc(doc(db, 'ingredients', editingId), {
+          name,
+        });
+      } else {
+        await addDoc(collection(db, 'ingredients'), {
+          name,
+          image: '',
+        });
+      }
+      resetForm();
+    }
+  };
+
+  const resetForm = () => {
+    setName('');
+    setImage(null);
+    setEditingId(null);
+  };
+
+  const handleEdit = (ingredient) => {
+    setName(ingredient.name);
+    setImage(null); // No cargamos la imagen existente
+    setEditingId(ingredient.id);
+  };
+
+  const handleDelete = (id) => {
+    setModal({
+      open: true,
+      title: 'Confirmar eliminación',
+      message: '¿Estás seguro de que deseas eliminar este ingrediente?',
+      onConfirm: async () => {
+        await deleteDoc(doc(db, 'ingredients', id));
+        setModal((m) => ({ ...m, open: false }));
+      }
+    });
   };
 
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-4">Gestión de Ingredientes</h1>
-      <form onSubmit={handleSubmit} className="mb-4">
-        <div className="flex items-center">
-          <input
-            type="text"
-            value={newIngredient}
-            onChange={(e) => setNewIngredient(e.target.value)}
-            placeholder="Nombre del ingrediente"
-            required
-            className="flex-grow p-2 border rounded mr-2"
-          />
+      <h1 className="text-2xl font-bold mb-4">Ingredientes</h1>
+      <form onSubmit={handleSubmit} className="mb-6 space-y-4 bg-white/80 p-4 rounded shadow">
+        <input
+          type="text"
+          placeholder="Nombre del ingrediente"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          className="w-full p-2 border border-pantonebrown rounded text-pantoneblack"
+        />
+        <input
+          type="file"
+          onChange={(e) => setImage(e.target.files[0])}
+          className="w-full p-2 border border-pantonebrown rounded text-pantoneblack"
+        />
+        <button
+          type="submit"
+          className={`w-full px-4 py-2 text-white rounded shadow transition ${editingId ? 'bg-pantoneyellow hover:bg-pantonegreen text-pantoneblack' : 'bg-pantonegreen hover:bg-pantoneyellow text-pantoneblack'}`}
+        >
+          {editingId ? 'Actualizar ingrediente' : 'Agregar ingrediente'}
+        </button>
+        {editingId && (
           <button
-            type="submit"
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            type="button"
+            onClick={resetForm}
+            className="w-full px-4 py-2 bg-pantonebrown text-white rounded shadow hover:bg-pantoneblack transition"
           >
-            Agregar Ingrediente
+            Cancelar
           </button>
-        </div>
+        )}
       </form>
-      <table className="min-w-full bg-white">
-        <thead>
-          <tr>
-            <th className="py-2 px-4 border-b text-left">Ingrediente</th>
-          </tr>
-        </thead>
-        <tbody>
-          {ingredients.map((ing) => (
-            <tr key={ing.id}>
-              <td className="py-2 px-4 border-b">{ing.name}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <ul className="grid grid-cols-1 gap-3">
+        {ingredients.map((ing) => (
+          <li key={ing.id} className="bg-white/80 rounded shadow p-3 flex items-center justify-between">
+            <div className="flex items-center">
+              {ing.image && (
+                <img
+                  src={ing.image}
+                  alt={ing.name}
+                  className="w-12 h-12 object-cover rounded-full mr-3 border-2 border-pantonebrown"
+                />
+              )}
+              <h2 className="text-lg font-bold text-pantoneblack">{ing.name}</h2>
+            </div>
+            <div className="flex space-x-2">
+              <button
+                onClick={() => handleEdit(ing)}
+                className="px-2 py-1 bg-pantoneyellow text-pantoneblack rounded hover:bg-pantonegreen transition"
+              >
+                Editar
+              </button>
+              <button
+                onClick={() => handleDelete(ing.id)}
+                className="px-2 py-1 bg-pantonebrown text-white rounded hover:bg-pantoneblack transition"
+              >
+                Eliminar
+              </button>
+            </div>
+          </li>
+        ))}
+      </ul>
+      <Modal
+        isOpen={modal.open}
+        title={modal.title}
+        onClose={() => setModal((m) => ({ ...m, open: false }))}
+        actions={modal.onConfirm && (
+          <button
+            onClick={() => {
+              if (modal.onConfirm) modal.onConfirm();
+            }}
+            className="px-4 py-2 bg-pantonebrown text-white rounded hover:bg-pantoneblack transition"
+          >
+            Confirmar
+          </button>
+        )}
+      >
+        {modal.message}
+      </Modal>
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import React, { useContext } from 'react';
+import React, { useContext, useState } from 'react';
 import { Routes, Route, Link } from 'react-router-dom';
 import HomePage from './pages/HomePage';
 import CategoryPage from './pages/CategoryPage';
@@ -15,47 +15,52 @@ import SignupPage from './pages/SignupPage';
 
 function App() {
   const { user, signout } = useContext(AuthContext);
+  const [menuOpen, setMenuOpen] = useState(false);
+
   return (
     <CategoriesProvider>
       <IngredientsProvider>
         <RecipesProvider>
-          <div className="max-w-3xl mx-auto p-4">
-            <nav className="bg-white shadow mb-6 p-4 rounded flex items-center">
-              <Link to="/" className="text-xl font-semibold text-gray-800">Inicio</Link>
-              <Link to="/add" className="ml-6 text-xl font-semibold text-blue-600 hover:text-blue-800">Agregar Receta</Link>
-              <Link to="/categories" className="ml-6 text-xl font-semibold text-blue-600 hover:text-blue-800">Categorías</Link>
-              <Link to="/ingredients" className="ml-6 text-xl font-semibold text-blue-600 hover:text-blue-800">Ingredientes</Link>
-              <div className="ml-auto">
-                {user ? (
-                  <button onClick={signout} className="text-red-600 hover:text-red-800">
-                    Cerrar sesión
-                  </button>
-                ) : (
-                  <>
-                    <Link to="/login" className="text-blue-600 hover:text-blue-800 mr-4">
-                      Iniciar sesión
-                    </Link>
-                    <Link to="/signup" className="text-blue-600 hover:text-blue-800">
-                      Registrarse
-                    </Link>
-                  </>
-                )}
+          <div className="min-h-screen bg-pantonebg text-pantoneblack">
+            <div className="max-w-lg mx-auto p-2 sm:p-4">
+              {/* Menú hamburguesa */}
+              <nav className="bg-pantoneyellow text-pantoneblack rounded-b-xl shadow mb-4 p-3 flex items-center justify-between relative">
+                <Link to="/" className="text-lg font-bold tracking-wide">RecetApp</Link>
+                <button
+                  className="sm:hidden flex flex-col justify-center items-center w-8 h-8 focus:outline-none"
+                  onClick={() => setMenuOpen(!menuOpen)}
+                  aria-label="Abrir menú"
+                >
+                  <span className={`block h-1 w-6 bg-pantoneblack rounded transition-all duration-300 ${menuOpen ? 'rotate-45 translate-y-2' : ''}`}></span>
+                  <span className={`block h-1 w-6 bg-pantoneblack rounded my-1 transition-all duration-300 ${menuOpen ? 'opacity-0' : ''}`}></span>
+                  <span className={`block h-1 w-6 bg-pantoneblack rounded transition-all duration-300 ${menuOpen ? '-rotate-45 -translate-y-2' : ''}`}></span>
+                </button>
+                <div className={`sm:flex gap-2 ${menuOpen ? 'flex flex-col absolute top-12 right-0 bg-pantoneyellow rounded shadow p-4 z-50' : 'hidden sm:flex'}`}>
+                  <Link to="/add" className="text-xs sm:text-sm px-2 py-1 rounded bg-pantonegreen hover:bg-pantoneyellow transition text-white block">Agregar</Link>
+                  <Link to="/categories" className="text-xs sm:text-sm px-2 py-1 rounded bg-pantonegreen hover:bg-pantoneyellow transition text-white block">Categorías</Link>
+                  <Link to="/ingredients" className="text-xs sm:text-sm px-2 py-1 rounded bg-pantonegreen hover:bg-pantoneyellow transition text-white block">Ingredientes</Link>
+                </div>
+              </nav>
+              {/* Card general blanco */}
+              <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 mb-4">
+                <div className="py-2 sm:py-4">
+                  <Routes>
+                    <Route path="/login" element={<LoginPage />} />
+                    <Route path="/signup" element={<SignupPage />} />
+                    <Route path="/" element={<HomePage />} />
+                    <Route path="/add" element={<RequireAuth><AddRecipePage /></RequireAuth>} />
+                    <Route path="/category/:categoryId" element={<CategoryPage />} />
+                    <Route path="/recipe/:recipeId" element={<RecipePage />} />
+                    <Route path="/categories" element={<RequireAuth><CategoriesPage /></RequireAuth>} />
+                    <Route path="/ingredients" element={<RequireAuth><IngredientsPage /></RequireAuth>} />
+                  </Routes>
+                </div>
               </div>
-            </nav>
+            </div>
+            <footer className="bg-pantonebrown text-pantoneblack text-xs text-center py-2 mt-4 rounded-t-xl">
+              © 2025 RecetApp
+            </footer>
           </div>
-          <div className="max-w-3xl mx-auto p-4">
-            <Routes>
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/signup" element={<SignupPage />} />
-              <Route path="/" element={<HomePage />} />
-              <Route path="/add" element={<RequireAuth><AddRecipePage /></RequireAuth>} />
-              <Route path="/category/:categoryId" element={<CategoryPage />} />
-              <Route path="/recipe/:recipeId" element={<RecipePage />} />
-              <Route path="/categories" element={<RequireAuth><CategoriesPage /></RequireAuth>} />
-              <Route path="/ingredients" element={<RequireAuth><IngredientsPage /></RequireAuth>} />
-            </Routes>
-          </div>
-
         </RecipesProvider>
       </IngredientsProvider>
     </CategoriesProvider>
