@@ -1,28 +1,25 @@
 import React, { createContext, useState, useEffect } from 'react';
+import { collection, getDocs, onSnapshot } from 'firebase/firestore';
 import { db } from './firebase';
-import { collection, query, orderBy, onSnapshot, addDoc } from 'firebase/firestore';
 
-// Context for categories stored in Firestore
-export const CategoriesContext = createContext({
-  categories: [],
-  addCategory: async () => {},
-});
+export const CategoriesContext = createContext();
 
-export function CategoriesProvider({ children }) {
+export const CategoriesProvider = ({ children }) => {
   const [categories, setCategories] = useState([]);
+
   useEffect(() => {
-    const q = query(collection(db, 'categories'), orderBy('name'));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const cats = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-      setCategories(cats);
+    const unsubscribe = onSnapshot(collection(db, 'categories'), (querySnapshot) => {
+      const categoriesData = querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setCategories(categoriesData);
     });
     return () => unsubscribe();
   }, []);
 
-  // Add a new category to Firestore
-  const addCategory = async (name) => {
-    const docRef = await addDoc(collection(db, 'categories'), { name: name.trim() });
-    return docRef.id;
+  const addCategory = (newCategory) => {
+    setCategories((prevCategories) => [...prevCategories, newCategory]);
   };
 
   return (
@@ -30,4 +27,4 @@ export function CategoriesProvider({ children }) {
       {children}
     </CategoriesContext.Provider>
   );
-}
+};

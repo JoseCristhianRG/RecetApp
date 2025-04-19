@@ -1,25 +1,66 @@
-import React, { useState, useContext } from 'react';
-import { addDoc, collection, serverTimestamp, updateDoc } from 'firebase/firestore';
-import { db, uploadImage } from '../firebase';
+import React, { useState, useEffect, useContext } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { db } from '../firebase';
+import { doc, getDoc, updateDoc, collection, getDocs, query, where, addDoc } from 'firebase/firestore';
 import { CategoriesContext } from '../CategoriesContext';
 import { AuthContext } from '../AuthContext';
 import { Switch } from '@headlessui/react';
 
-function AddRecipePage() {
+import { uploadImage } from '../firebase';
+
+function EditRecipePage() {
+  const { id } = useParams();
+  const navigate = useNavigate();
   const { categories } = useContext(CategoriesContext);
   const { user } = useContext(AuthContext);
+  const [loading, setLoading] = useState(true);
   const [name, setName] = useState('');
   const [category, setCategory] = useState('');
   const [ingredients, setIngredients] = useState(['']);
-  const [steps, setSteps] = useState([
-    { title: '', description: '', image: null }
-  ]);
+  const [steps, setSteps] = useState([{ title: '', description: '', image: null, imageUrl: '' }]);
   const [image, setImage] = useState(null);
-  const [errors, setErrors] = useState({});
+  const [imageUrl, setImageUrl] = useState('');
   const [isPublic, setIsPublic] = useState(true);
   const [status, setStatus] = useState('draft');
   const [tagInput, setTagInput] = useState('');
   const [tags, setTags] = useState([]);
+  const [errors, setErrors] = useState({});
+
+  useEffect(() => {
+    async function fetchRecipe() {
+      const recipeRef = doc(db, 'recipes', id);
+      const recipeSnap = await getDoc(recipeRef);
+      if (recipeSnap.exists()) {
+        const data = recipeSnap.data();
+        setName(data.name || '');
+        setCategory(data.category || '');
+        setIngredients(data.ingredients || ['']);
+        setImageUrl(data.imageUrl || '');
+        setIsPublic(data.isPublic !== false);
+        setStatus(data.status || 'draft');
+        setTags(data.tags || []);
+        // Cargar pasos relacionados
+        const stepsQuery = query(collection(db, 'steps'), where('recipeId', '==', id));
+        const stepsSnap = await getDocs(stepsQuery);
+        const stepsArr = stepsSnap.docs
+          .map(doc => ({ ...doc.data(), id: doc.id }))
+          .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+        setSteps(
+          stepsArr.length > 0
+            ? stepsArr.map(s => ({
+                title: s.title || '',
+                description: s.description || '',
+                image: null,
+                imageUrl: s.imageUrl || '',
+                stepId: s.id
+              }))
+            : [{ title: '', description: '', image: null, imageUrl: '' }]
+        );
+      }
+      setLoading(false);
+    }
+    fetchRecipe();
+  }, [id]);
 
   const validate = () => {
     const newErrors = {};
@@ -32,87 +73,6 @@ function AddRecipePage() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!validate()) return;
-    let imageUrl = '';
-    if (image) {
-      // Subir imagen principal a recipes/ID_RECETA/imagen.png
-      const tempId = Date.now().toString(); // id temporal para crear la receta y obtener el id real
-      const tempRecipeRef = await addDoc(collection(db, 'recipes'), { name: 'temp', createdAt: serverTimestamp() });
-      const recipeId = tempRecipeRef.id;
-      await updateDoc(tempRecipeRef, { name }); // actualiza el nombre real
-      imageUrl = await uploadImage(image, `recipes/${recipeId}/imagen.png`);
-      await updateDoc(tempRecipeRef, { imageUrl });
-      // Guardar el resto de los datos
-      await updateDoc(tempRecipeRef, {
-        category,
-        ingredients,
-        createdBy: user?.uid || null,
-        isPublic,
-        status,
-        publishedAt: status === 'published' ? serverTimestamp() : null,
-        tags,
-      });
-      // Guardar pasos en la colección steps
-      for (let i = 0; i < steps.length; i++) {
-        let stepImageUrl = '';
-        if (steps[i].image) {
-          stepImageUrl = await uploadImage(steps[i].image, `steps/${recipeId}`);
-        }
-        await addDoc(collection(db, 'steps'), {
-          recipeId: recipeId,
-          order: i,
-          title: steps[i].title,
-          description: steps[i].description,
-          imageUrl: stepImageUrl,
-        });
-      }
-      setName('');
-      setCategory('');
-      setIngredients(['']);
-      setSteps([{ title: '', description: '', image: null }]);
-      setImage(null);
-      setErrors({});
-      setTags([]);
-      return;
-    }
-    const recipeData = {
-      name,
-      category,
-      ingredients,
-      imageUrl,
-      createdBy: user?.uid || null,
-      createdAt: serverTimestamp(),
-      isPublic,
-      status,
-      publishedAt: status === 'published' ? serverTimestamp() : null,
-      tags,
-    };
-    const recipeRef = await addDoc(collection(db, 'recipes'), recipeData);
-    // Guardar pasos en la colección steps
-    for (let i = 0; i < steps.length; i++) {
-      let stepImageUrl = '';
-      if (steps[i].image) {
-        stepImageUrl = await uploadImage(steps[i].image, `steps/${recipeRef.id}`);
-      }
-      await addDoc(collection(db, 'steps'), {
-        recipeId: recipeRef.id,
-        order: i,
-        title: steps[i].title,
-        description: steps[i].description,
-        imageUrl: stepImageUrl,
-      });
-    }
-    setName('');
-    setCategory('');
-    setIngredients(['']);
-    setSteps([{ title: '', description: '', image: null }]);
-    setImage(null);
-    setErrors({});
-    setTags([]);
-  };
-
   const handleAddTag = () => {
     const newTag = tagInput.trim();
     if (newTag && !tags.includes(newTag)) {
@@ -120,16 +80,62 @@ function AddRecipePage() {
       setTagInput('');
     }
   };
-
   const handleRemoveTag = (tag) => {
     setTags(tags.filter(t => t !== tag));
   };
 
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!validate()) return;
+    let newImageUrl = imageUrl;
+    if (image) {
+      // Subir imagen principal a recipes/ID_RECETA/imagen.png
+      newImageUrl = await uploadImage(image, `recipes/${id}/imagen.png`);
+    }
+    await updateDoc(doc(db, 'recipes', id), {
+      name,
+      category,
+      ingredients,
+      imageUrl: newImageUrl,
+      isPublic,
+      status,
+      tags,
+    });
+    // Actualizar pasos existentes y agregar nuevos
+    for (let i = 0; i < steps.length; i++) {
+      let stepImageUrl = steps[i].imageUrl || '';
+      if (steps[i].image) {
+        stepImageUrl = await uploadImage(steps[i].image, `steps/${id}`);
+      }
+      if (steps[i].stepId) {
+        // Actualizar paso existente
+        await updateDoc(doc(db, 'steps', steps[i].stepId), {
+          title: steps[i].title,
+          description: steps[i].description,
+          imageUrl: stepImageUrl,
+        });
+      } else {
+        // Crear nuevo paso
+        await addDoc(collection(db, 'steps'), {
+          recipeId: id,
+          order: i,
+          title: steps[i].title,
+          description: steps[i].description,
+          imageUrl: stepImageUrl,
+        });
+      }
+    }
+    navigate('/mis-recetas');
+  };
+
+  if (loading) return <div>Cargando...</div>;
+
   return (
-    <div className="p-6">
-      <div className="max-w-md md:max-w-2xl xl:max-w-4xl mx-auto bg-white p-6 rounded">
-        <h1 className="text-2xl font-bold mb-4">Agregar Receta</h1>
+    <div className="p-6 py-3">
+      <div className="max-w-4xl mx-auto bg-white p-6 sm:p-10 rounded shadow">
+        <h1 className="text-2xl font-bold mb-4">Editar Receta</h1>
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* ...resto del formulario... */}
           <div>
             <input
               type="text"
@@ -209,12 +215,15 @@ function AddRecipePage() {
                   }}
                   className="w-full p-2 border rounded mb-1"
                 />
+                {step.imageUrl && !step.image && (
+                  <img src={step.imageUrl} alt="Paso" className="w-16 h-16 object-cover rounded mb-1" />
+                )}
                 {steps.length > 1 && (
                   <button type="button" onClick={() => setSteps(steps.filter((_, i) => i !== idx))} className="text-xs text-red-600">Eliminar paso</button>
                 )}
               </div>
             ))}
-            <button type="button" onClick={() => setSteps([...steps, { title: '', description: '', image: null }])} className="text-xs text-pantonegreen underline">Agregar paso</button>
+            <button type="button" onClick={() => setSteps([...steps, { title: '', description: '', image: null, imageUrl: '' }])} className="text-xs text-pantonegreen underline">Agregar paso</button>
             {(errors.steps || errors.stepsDesc) && <p className="text-red-500 text-xs mt-1">{errors.steps || errors.stepsDesc}</p>}
           </div>
           <div>
@@ -223,6 +232,9 @@ function AddRecipePage() {
               onChange={(e) => setImage(e.target.files[0])}
               className="w-full p-2 border rounded"
             />
+            {imageUrl && !image && (
+              <img src={imageUrl} alt="Receta" className="w-20 h-20 object-cover rounded mt-2" />
+            )}
           </div>
           <div>
             <label className="block font-medium mb-1">Visibilidad</label>
@@ -283,7 +295,7 @@ function AddRecipePage() {
             type="submit"
             className="px-4 py-2 bg-blue-600 text-white rounded shadow hover:bg-blue-700 transition w-full"
           >
-            Agregar receta
+            Guardar cambios
           </button>
         </form>
       </div>
@@ -291,4 +303,4 @@ function AddRecipePage() {
   );
 }
 
-export default AddRecipePage;
+export default EditRecipePage;

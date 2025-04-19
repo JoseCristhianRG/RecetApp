@@ -1,81 +1,166 @@
 import React, { useState, useContext } from 'react';
 import { CategoriesContext } from '../CategoriesContext';
-import { RecipesContext } from '../RecipesContext';
+import { addDoc, collection, doc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { db } from '../firebase';
+import Modal from '../components/Modal';
 
 function CategoriesPage() {
-  const { categories, addCategory } = useContext(CategoriesContext);
-  const { recipes } = useContext(RecipesContext);
-  const [newCategory, setNewCategory] = useState('');
+  const { categories } = useContext(CategoriesContext);
+  const [name, setName] = useState('');
+  const [image, setImage] = useState(null);
+  const [editingId, setEditingId] = useState(null); // ID de la categoría que se está editando
+  const [modal, setModal] = useState({ open: false, title: '', message: '', onConfirm: null });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (newCategory.trim()) {
-      try {
-        await addCategory(newCategory);
-        setNewCategory('');
-      } catch (err) {
-        console.error('Error al agregar categoría:', err);
-      }
+    if (!name.trim()) {
+      setModal({
+        open: true,
+        title: 'Campo obligatorio',
+        message: 'El nombre de la categoría es obligatorio.',
+        onConfirm: null
+      });
+      return;
     }
-  };
-  // Genera categorías únicas basadas en las recetas existentes
-  const handleGenerate = async () => {
-    try {
-      const recipeCats = [...new Set(recipes.map((r) => r.category))];
-      for (const name of recipeCats) {
-        if (!categories.some((c) => c.name === name)) {
-          await addCategory(name);
+    let imageBase64 = '';
+    if (image) {
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        imageBase64 = reader.result;
+        if (editingId) {
+          // Actualizar categoría existente
+          await updateDoc(doc(db, 'categories', editingId), {
+            name,
+            image: imageBase64,
+          });
+        } else {
+          // Agregar nueva categoría
+          await addDoc(collection(db, 'categories'), {
+            name,
+            image: imageBase64,
+          });
         }
+        resetForm();
+      };
+      reader.readAsDataURL(image);
+    } else {
+      if (editingId) {
+        await updateDoc(doc(db, 'categories', editingId), {
+          name,
+        });
+      } else {
+        await addDoc(collection(db, 'categories'), {
+          name,
+          image: '',
+        });
       }
-    } catch (err) {
-      console.error('Error generando categorías:', err);
+      resetForm();
     }
   };
 
+  const resetForm = () => {
+    setName('');
+    setImage(null);
+    setEditingId(null);
+  };
+
+  const handleEdit = (category) => {
+    setName(category.name);
+    setImage(null); // No cargamos la imagen existente
+    setEditingId(category.id);
+  };
+
+  const handleDelete = (id) => {
+    setModal({
+      open: true,
+      title: 'Confirmar eliminación',
+      message: '¿Estás seguro de que deseas eliminar esta categoría?',
+      onConfirm: async () => {
+        await deleteDoc(doc(db, 'categories', id));
+        setModal((m) => ({ ...m, open: false }));
+      }
+    });
+  };
+
   return (
-    <div>
-      <h1 className="text-2xl font-bold mb-4">Gestión de Categorías</h1>
-      <form onSubmit={handleSubmit} className="mb-4">
-        <div className="flex items-center">
-          <input
-            type="text"
-            value={newCategory}
-            onChange={(e) => setNewCategory(e.target.value)}
-            placeholder="Nombre de la categoría"
-            required
-            className="flex-grow p-2 border rounded mr-2"
-          />
-          <button
-            type="submit"
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-          >
-            Agregar Categoría
-          </button>
-        </div>
-      </form>
-      <div className="mb-4">
+    <div className="p-6 py-3">
+      <h1 className="text-2xl font-bold mb-4">Categorías</h1>
+      <form onSubmit={handleSubmit} className="mb-6 space-y-4 bg-white/80 p-4 rounded shadow">
+        <input
+          type="text"
+          placeholder="Nombre de la categoría"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          className="w-full p-2 border border-pantonebrown rounded text-pantoneblack"
+        />
+        <input
+          type="file"
+          onChange={(e) => setImage(e.target.files[0])}
+          className="w-full p-2 border border-pantonebrown rounded text-pantoneblack"
+        />
         <button
-          type="button"
-          onClick={handleGenerate}
-          className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+          type="submit"
+          className={`w-full px-4 py-2 text-white rounded shadow transition ${editingId ? 'bg-pantoneyellow hover:bg-pantonegreen text-pantoneblack' : 'bg-pantonegreen hover:bg-pantoneyellow text-pantoneblack'}`}
         >
-          Generar categorías
+          {editingId ? 'Actualizar categoría' : 'Agregar categoría'}
         </button>
-      </div>
-      <table className="min-w-full bg-white">
-        <thead>
-          <tr>
-            <th className="py-2 px-4 border-b text-left">Nombre</th>
-          </tr>
-        </thead>
-        <tbody>
-          {categories.map((cat) => (
-            <tr key={cat.id}>
-              <td className="py-2 px-4 border-b">{cat.name}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+        {editingId && (
+          <button
+            type="button"
+            onClick={resetForm}
+            className="w-full px-4 py-2 bg-pantonebrown text-white rounded shadow hover:bg-pantoneblack transition"
+          >
+            Cancelar
+          </button>
+        )}
+      </form>
+      <ul className="grid grid-cols-1 gap-3">
+        {categories.map((cat) => (
+          <li key={cat.id} className="bg-white/80 rounded shadow p-3 flex items-center justify-between">
+            <div className="flex items-center">
+              {cat.image && (
+                <img
+                  src={cat.image}
+                  alt={cat.name}
+                  className="w-12 h-12 object-cover rounded-full mr-3 border-2 border-pantonebrown"
+                />
+              )}
+              <h2 className="text-lg font-bold text-pantoneblack">{cat.name}</h2>
+            </div>
+            <div className="flex space-x-2">
+              <button
+                onClick={() => handleEdit(cat)}
+                className="px-2 py-1 bg-pantoneyellow text-pantoneblack rounded hover:bg-pantonegreen transition"
+              >
+                Editar
+              </button>
+              <button
+                onClick={() => handleDelete(cat.id)}
+                className="px-2 py-1 bg-pantonebrown text-white rounded hover:bg-pantoneblack transition"
+              >
+                Eliminar
+              </button>
+            </div>
+          </li>
+        ))}
+      </ul>
+      <Modal
+        isOpen={modal.open}
+        title={modal.title}
+        onClose={() => setModal((m) => ({ ...m, open: false }))}
+        actions={modal.onConfirm && (
+          <button
+            onClick={() => {
+              if (modal.onConfirm) modal.onConfirm();
+            }}
+            className="px-4 py-2 bg-pantonebrown text-white rounded hover:bg-pantoneblack transition"
+          >
+            Confirmar
+          </button>
+        )}
+      >
+        {modal.message}
+      </Modal>
     </div>
   );
 }
