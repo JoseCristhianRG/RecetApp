@@ -9,6 +9,38 @@ function AddRecipePage() {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [image, setImage] = useState(null);
+  const [errors, setErrors] = useState({});
+  const [category, setCategory] = useState('');
+  const { categories } = useContext(CategoriesContext);
+  const [ingredients, setIngredients] = useState(['']);
+  const [steps, setSteps] = useState([{ title: '', description: '', image: null }]);
+  const [isPublic, setIsPublic] = useState(true);
+  const [status, setStatus] = useState('draft');
+  const [tags, setTags] = useState([]);
+  const [tagInput, setTagInput] = useState('');
+  const { user } = useContext(AuthContext);
+
+  const handleAddTag = () => {
+    const newTag = tagInput.trim();
+    if (newTag && !tags.includes(newTag)) {
+      setTags([...tags, newTag]);
+      setTagInput('');
+    }
+  };
+  const handleRemoveTag = (tag) => {
+    setTags(tags.filter(t => t !== tag));
+  };
+
+  const validate = () => {
+    const newErrors = {};
+    if (!name.trim()) newErrors.name = 'El nombre es obligatorio.';
+    if (!category) newErrors.category = 'Selecciona una categoría.';
+    if (!ingredients[0] || ingredients.some((i) => !i.trim())) newErrors.ingredients = 'Agrega al menos un ingrediente.';
+    if (!steps[0].title.trim() || steps.some((s) => !s.title.trim())) newErrors.steps = 'Cada paso debe tener un nombre.';
+    if (!steps[0].description.trim() || steps.some((s) => !s.description.trim())) newErrors.stepsDesc = 'Cada paso debe tener una descripción.';
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -88,8 +120,8 @@ function AddRecipePage() {
   };
 
   return (
-    <div className="p-6 py-3">
-      <div className="max-w-md md:max-w-2xl xl:max-w-4xl mx-auto bg-white p-6 rounded shadow">
+    <div className="p-6">
+      <div className="max-w-md md:max-w-2xl xl:max-w-4xl mx-auto bg-white p-6 rounded">
         <h1 className="text-2xl font-bold mb-4">Agregar Receta</h1>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>

@@ -131,7 +131,7 @@ function EditRecipePage() {
 
   return (
     <div className="p-6 py-3">
-      <div className="max-w-md md:max-w-2xl xl:max-w-4xl mx-auto bg-white p-6 rounded shadow">
+      <div className="max-w-4xl mx-auto bg-white p-6 sm:p-10 rounded shadow">
         <h1 className="text-2xl font-bold mb-4">Editar Receta</h1>
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* ...resto del formulario... */}
