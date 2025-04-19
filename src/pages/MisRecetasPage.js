@@ -1,21 +1,28 @@
+// Importaciones principales de React, hooks, rutas y contextos
 import React, { useContext } from 'react';
 import { RecipesContext } from '../RecipesContext';
 import { AuthContext } from '../AuthContext';
 import { Link, useNavigate } from 'react-router-dom';
 
+// Componente para mostrar las recetas creadas por el usuario
 function MisRecetasPage() {
+  // Obtiene las recetas y el usuario autenticado desde el contexto
   const { recipes } = useContext(RecipesContext);
   const { user } = useContext(AuthContext);
   const navigate = useNavigate();
 
+  // Filtra las recetas creadas por el usuario actual
   const myRecipes = recipes.filter(r => r.createdBy === user?.uid);
 
   return (
+    // Layout principal de la página de mis recetas
     <div className="p-6 py-3">
       <h1 className="text-2xl font-bold mb-4">Mis Recetas</h1>
+      {/* Si no hay recetas, muestra un mensaje */}
       {myRecipes.length === 0 ? (
         <p>No has creado ninguna receta aún.</p>
       ) : (
+        // Si hay recetas, muestra la lista
         <ul className="space-y-3">
           {myRecipes.map(recipe => (
             <li key={recipe.id} className="bg-white/80 rounded shadow p-3 flex items-center justify-between">
@@ -43,4 +50,5 @@ function MisRecetasPage() {
   );
 }
 
+// Exporta el componente para su uso en las rutas
 export default MisRecetasPage;

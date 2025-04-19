@@ -1,3 +1,4 @@
+// Importaciones principales de React, hooks, contextos y dependencias de Firebase
 import React, { useState, useContext } from 'react';
 import { addDoc, collection, serverTimestamp, updateDoc } from 'firebase/firestore';
 import { db, uploadImage } from '../firebase';
@@ -5,9 +6,12 @@ import { CategoriesContext } from '../CategoriesContext';
 import { AuthContext } from '../AuthContext';
 import { Switch } from '@headlessui/react';
 
+// Componente para agregar una nueva receta
 function AddRecipePage() {
+  // Obtiene las categorías y el usuario autenticado desde el contexto
   const { categories } = useContext(CategoriesContext);
   const { user } = useContext(AuthContext);
+  // Estados para los campos del formulario y control de errores
   const [name, setName] = useState('');
   const [category, setCategory] = useState('');
   const [ingredients, setIngredients] = useState(['']);
@@ -21,6 +25,7 @@ function AddRecipePage() {
   const [tagInput, setTagInput] = useState('');
   const [tags, setTags] = useState([]);
 
+  // Función de validación de campos del formulario
   const validate = () => {
     const newErrors = {};
     if (!name.trim()) newErrors.name = 'El nombre es obligatorio.';
@@ -32,6 +37,7 @@ function AddRecipePage() {
     return Object.keys(newErrors).length === 0;
   };
 
+  // Maneja el envío del formulario para agregar la receta y sus pasos
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validate()) return;
@@ -113,6 +119,7 @@ function AddRecipePage() {
     setTags([]);
   };
 
+  // Función para agregar una etiqueta
   const handleAddTag = () => {
     const newTag = tagInput.trim();
     if (newTag && !tags.includes(newTag)) {
@@ -121,15 +128,18 @@ function AddRecipePage() {
     }
   };
 
+  // Función para eliminar una etiqueta
   const handleRemoveTag = (tag) => {
     setTags(tags.filter(t => t !== tag));
   };
 
   return (
+    // Layout principal del formulario de agregar receta
     <div className="p-6">
       <div className="max-w-md md:max-w-2xl xl:max-w-4xl mx-auto bg-white p-6 rounded">
         <h1 className="text-2xl font-bold mb-4">Agregar Receta</h1>
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Campo para el nombre de la receta */}
           <div>
             <input
               type="text"
@@ -140,6 +150,7 @@ function AddRecipePage() {
             />
             {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
           </div>
+          {/* Selector de categoría */}
           <div>
             <select
               value={category}
@@ -153,6 +164,7 @@ function AddRecipePage() {
             </select>
             {errors.category && <p className="text-red-500 text-xs mt-1">{errors.category}</p>}
           </div>
+          {/* Sección de ingredientes */}
           <div>
             <label className="block font-medium mb-1">Ingredientes</label>
             {ingredients.map((ing, idx) => (
@@ -175,6 +187,7 @@ function AddRecipePage() {
             <button type="button" onClick={() => setIngredients([...ingredients, ''])} className="text-xs text-pantonegreen underline">Agregar ingrediente</button>
             {errors.ingredients && <p className="text-red-500 text-xs mt-1">{errors.ingredients}</p>}
           </div>
+          {/* Sección de pasos */}
           <div>
             <label className="block font-medium mb-1">Pasos</label>
             {steps.map((step, idx) => (
@@ -217,6 +230,7 @@ function AddRecipePage() {
             <button type="button" onClick={() => setSteps([...steps, { title: '', description: '', image: null }])} className="text-xs text-pantonegreen underline">Agregar paso</button>
             {(errors.steps || errors.stepsDesc) && <p className="text-red-500 text-xs mt-1">{errors.steps || errors.stepsDesc}</p>}
           </div>
+          {/* Campo para imagen principal */}
           <div>
             <input
               type="file"
@@ -224,6 +238,7 @@ function AddRecipePage() {
               className="w-full p-2 border rounded"
             />
           </div>
+          {/* Switch de visibilidad */}
           <div>
             <label className="block font-medium mb-1">Visibilidad</label>
             <Switch
@@ -238,6 +253,7 @@ function AddRecipePage() {
             </Switch>
             <span className="ml-3 text-sm font-medium">{isPublic ? 'Pública' : 'Privada'}</span>
           </div>
+          {/* Switch de estado (publicada/borrador) */}
           <div>
             <label className="block font-medium mb-1">Estado</label>
             <Switch
@@ -252,6 +268,7 @@ function AddRecipePage() {
             </Switch>
             <span className="ml-3 text-sm font-medium">{status === 'published' ? 'Publicada' : 'Borrador'}</span>
           </div>
+          {/* Sección de etiquetas */}
           <div>
             <label className="block font-medium mb-1">Etiquetas</label>
             <div className="flex gap-2 mb-2">
@@ -279,6 +296,7 @@ function AddRecipePage() {
               ))}
             </div>
           </div>
+          {/* Botón para enviar el formulario */}
           <button
             type="submit"
             className="px-4 py-2 bg-blue-600 text-white rounded shadow hover:bg-blue-700 transition w-full"
@@ -291,4 +309,5 @@ function AddRecipePage() {
   );
 }
 
+// Exporta el componente para su uso en las rutas
 export default AddRecipePage;

@@ -1,16 +1,21 @@
+// Importaciones principales de React, hooks, contextos y dependencias de Firebase
 import React, { useState, useContext } from 'react';
 import { IngredientsContext } from '../IngredientsContext';
 import { addDoc, collection, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import Modal from '../components/Modal';
 
+// Componente para gestionar los ingredientes
 function IngredientsPage() {
+  // Obtiene los ingredientes desde el contexto
   const { ingredients } = useContext(IngredientsContext);
+  // Estados para el formulario, imagen, edición y modal
   const [name, setName] = useState('');
   const [image, setImage] = useState(null);
   const [editingId, setEditingId] = useState(null); // ID del ingrediente que se está editando
   const [modal, setModal] = useState({ open: false, title: '', message: '', onConfirm: null });
 
+  // Maneja el envío del formulario para agregar o actualizar un ingrediente
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!name.trim()) {
@@ -58,18 +63,21 @@ function IngredientsPage() {
     }
   };
 
+  // Resetea el formulario a su estado inicial
   const resetForm = () => {
     setName('');
     setImage(null);
     setEditingId(null);
   };
 
+  // Maneja la edición de un ingrediente existente
   const handleEdit = (ingredient) => {
     setName(ingredient.name);
     setImage(null); // No cargamos la imagen existente
     setEditingId(ingredient.id);
   };
 
+  // Maneja la eliminación de un ingrediente con confirmación en modal
   const handleDelete = (id) => {
     setModal({
       open: true,
@@ -83,8 +91,10 @@ function IngredientsPage() {
   };
 
   return (
+    // Layout principal de la página de ingredientes
     <div className="p-6 py-3">
       <h1 className="text-2xl font-bold mb-4">Ingredientes</h1>
+      {/* Formulario para agregar o editar un ingrediente */}
       <form onSubmit={handleSubmit} className="mb-6 space-y-4 bg-white/80 p-4 rounded shadow">
         <input
           type="text"
@@ -114,6 +124,7 @@ function IngredientsPage() {
           </button>
         )}
       </form>
+      {/* Lista de ingredientes existentes */}
       <ul className="grid grid-cols-1 gap-3">
         {ingredients.map((ing) => (
           <li key={ing.id} className="bg-white/80 rounded shadow p-3 flex items-center justify-between">
@@ -144,6 +155,7 @@ function IngredientsPage() {
           </li>
         ))}
       </ul>
+      {/* Modal de confirmación para eliminar */}
       <Modal
         isOpen={modal.open}
         title={modal.title}
@@ -165,4 +177,5 @@ function IngredientsPage() {
   );
 }
 
+// Exporta el componente para su uso en las rutas
 export default IngredientsPage;
