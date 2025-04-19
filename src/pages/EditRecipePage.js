@@ -1,25 +1,64 @@
-import React, { useState, useContext } from 'react';
-import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import React, { useState, useEffect, useContext } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { db } from '../firebase';
+import { doc, getDoc, updateDoc, collection, getDocs, query, where, addDoc } from 'firebase/firestore';
 import { CategoriesContext } from '../CategoriesContext';
 import { AuthContext } from '../AuthContext';
 import { Switch } from '@headlessui/react';
 
-function AddRecipePage() {
+function EditRecipePage() {
+  const { id } = useParams();
+  const navigate = useNavigate();
   const { categories } = useContext(CategoriesContext);
   const { user } = useContext(AuthContext);
+  const [loading, setLoading] = useState(true);
   const [name, setName] = useState('');
   const [category, setCategory] = useState('');
   const [ingredients, setIngredients] = useState(['']);
-  const [steps, setSteps] = useState([
-    { title: '', description: '', image: null }
-  ]);
+  const [steps, setSteps] = useState([{ title: '', description: '', image: null, imageUrl: '' }]);
   const [image, setImage] = useState(null);
-  const [errors, setErrors] = useState({});
+  const [imageUrl, setImageUrl] = useState('');
   const [isPublic, setIsPublic] = useState(true);
   const [status, setStatus] = useState('draft');
   const [tagInput, setTagInput] = useState('');
   const [tags, setTags] = useState([]);
+  const [errors, setErrors] = useState({});
+
+  useEffect(() => {
+    async function fetchRecipe() {
+      const recipeRef = doc(db, 'recipes', id);
+      const recipeSnap = await getDoc(recipeRef);
+      if (recipeSnap.exists()) {
+        const data = recipeSnap.data();
+        setName(data.name || '');
+        setCategory(data.category || '');
+        setIngredients(data.ingredients || ['']);
+        setImageUrl(data.imageUrl || '');
+        setIsPublic(data.isPublic !== false);
+        setStatus(data.status || 'draft');
+        setTags(data.tags || []);
+        // Cargar pasos relacionados
+        const stepsQuery = query(collection(db, 'steps'), where('recipeId', '==', id));
+        const stepsSnap = await getDocs(stepsQuery);
+        const stepsArr = stepsSnap.docs
+          .map(doc => ({ ...doc.data(), id: doc.id }))
+          .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+        setSteps(
+          stepsArr.length > 0
+            ? stepsArr.map(s => ({
+                title: s.title || '',
+                description: s.description || '',
+                image: null,
+                imageUrl: s.imageUrl || '',
+                stepId: s.id
+              }))
+            : [{ title: '', description: '', image: null, imageUrl: '' }]
+        );
+      }
+      setLoading(false);
+    }
+    fetchRecipe();
+  }, [id]);
 
   const validate = () => {
     const newErrors = {};
@@ -32,10 +71,21 @@ function AddRecipePage() {
     return Object.keys(newErrors).length === 0;
   };
 
+  const handleAddTag = () => {
+    const newTag = tagInput.trim();
+    if (newTag && !tags.includes(newTag)) {
+      setTags([...tags, newTag]);
+      setTagInput('');
+    }
+  };
+  const handleRemoveTag = (tag) => {
+    setTags(tags.filter(t => t !== tag));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validate()) return;
-    let imageBase64 = '';
+    let imageBase64 = imageUrl;
     if (image) {
       imageBase64 = await new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -44,22 +94,19 @@ function AddRecipePage() {
         reader.readAsDataURL(image);
       });
     }
-    const recipeData = {
+    // Actualizar receta principal
+    await updateDoc(doc(db, 'recipes', id), {
       name,
       category,
       ingredients,
       imageUrl: imageBase64,
-      createdBy: user?.uid || null,
-      createdAt: serverTimestamp(),
       isPublic,
       status,
-      publishedAt: status === 'published' ? serverTimestamp() : null,
       tags,
-    };
-    const recipeRef = await addDoc(collection(db, 'recipes'), recipeData);
-    // Guardar pasos en la colección steps
+    });
+    // Actualizar pasos existentes y agregar nuevos
     for (let i = 0; i < steps.length; i++) {
-      let stepImageBase64 = '';
+      let stepImageBase64 = steps[i].imageUrl || '';
       if (steps[i].image) {
         stepImageBase64 = await new Promise((resolve, reject) => {
           const reader = new FileReader();
@@ -68,39 +115,34 @@ function AddRecipePage() {
           reader.readAsDataURL(steps[i].image);
         });
       }
-      await addDoc(collection(db, 'steps'), {
-        recipeId: recipeRef.id,
-        order: i,
-        title: steps[i].title,
-        description: steps[i].description,
-        imageUrl: stepImageBase64,
-      });
+      if (steps[i].stepId) {
+        // Actualizar paso existente
+        await updateDoc(doc(db, 'steps', steps[i].stepId), {
+          title: steps[i].title,
+          description: steps[i].description,
+          imageUrl: stepImageBase64,
+        });
+      } else {
+        // Crear nuevo paso
+        await addDoc(collection(db, 'steps'), {
+          recipeId: id,
+          order: i,
+          title: steps[i].title,
+          description: steps[i].description,
+          imageUrl: stepImageBase64,
+        });
+      }
     }
-    setName('');
-    setCategory('');
-    setIngredients(['']);
-    setSteps([{ title: '', description: '', image: null }]);
-    setImage(null);
-    setErrors({});
-    setTags([]);
+    navigate('/mis-recetas');
   };
 
-  const handleAddTag = () => {
-    const newTag = tagInput.trim();
-    if (newTag && !tags.includes(newTag)) {
-      setTags([...tags, newTag]);
-      setTagInput('');
-    }
-  };
-
-  const handleRemoveTag = (tag) => {
-    setTags(tags.filter(t => t !== tag));
-  };
+  if (loading) return <div>Cargando...</div>;
 
   return (
     <div className="max-w-md md:max-w-2xl xl:max-w-4xl mx-auto bg-white p-6 rounded shadow">
-      <h1 className="text-2xl font-bold mb-4">Agregar Receta</h1>
+      <h1 className="text-2xl font-bold mb-4">Editar Receta</h1>
       <form onSubmit={handleSubmit} className="space-y-4">
+        {/* ...campos similares a AddRecipePage, usando los estados definidos arriba... */}
         <div>
           <input
             type="text"
@@ -180,12 +222,15 @@ function AddRecipePage() {
                 }}
                 className="w-full p-2 border rounded mb-1"
               />
+              {step.imageUrl && !step.image && (
+                <img src={step.imageUrl} alt="Paso" className="w-16 h-16 object-cover rounded mb-1" />
+              )}
               {steps.length > 1 && (
                 <button type="button" onClick={() => setSteps(steps.filter((_, i) => i !== idx))} className="text-xs text-red-600">Eliminar paso</button>
               )}
             </div>
           ))}
-          <button type="button" onClick={() => setSteps([...steps, { title: '', description: '', image: null }])} className="text-xs text-pantonegreen underline">Agregar paso</button>
+          <button type="button" onClick={() => setSteps([...steps, { title: '', description: '', image: null, imageUrl: '' }])} className="text-xs text-pantonegreen underline">Agregar paso</button>
           {(errors.steps || errors.stepsDesc) && <p className="text-red-500 text-xs mt-1">{errors.steps || errors.stepsDesc}</p>}
         </div>
         <div>
@@ -194,6 +239,9 @@ function AddRecipePage() {
             onChange={(e) => setImage(e.target.files[0])}
             className="w-full p-2 border rounded"
           />
+          {imageUrl && !image && (
+            <img src={imageUrl} alt="Receta" className="w-20 h-20 object-cover rounded mt-2" />
+          )}
         </div>
         <div>
           <label className="block font-medium mb-1">Visibilidad</label>
@@ -254,11 +302,11 @@ function AddRecipePage() {
           type="submit"
           className="px-4 py-2 bg-blue-600 text-white rounded shadow hover:bg-blue-700 transition w-full"
         >
-          Agregar receta
+          Guardar cambios
         </button>
       </form>
     </div>
   );
 }
 
-export default AddRecipePage;
+export default EditRecipePage;

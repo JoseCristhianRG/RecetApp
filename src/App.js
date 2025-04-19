@@ -6,6 +6,8 @@ import RecipePage from './pages/RecipePage';
 import AddRecipePage from './pages/AddRecipePage';
 import CategoriesPage from './pages/CategoriesPage';
 import IngredientsPage from './pages/IngredientsPage';
+import MisRecetasPage from './pages/MisRecetasPage';
+import EditRecipePage from './pages/EditRecipePage';
 import { RecipesProvider } from './RecipesContext';
 import { CategoriesProvider } from './CategoriesContext';
 import { IngredientsProvider } from './IngredientsContext';
@@ -21,8 +23,8 @@ function App() {
     <CategoriesProvider>
       <IngredientsProvider>
         <RecipesProvider>
-          <div className="min-h-screen bg-pantonebg text-pantoneblack">
-            <div className="max-w-lg mx-auto p-2 sm:p-4">
+          <div className="bg-pattern min-h-screen text-pantoneblack">
+            <div className="max-w-lg md:max-w-2xl xl:max-w-4xl mx-auto p-2 sm:p-4">
               {/* Menú hamburguesa */}
               <nav className="bg-pantoneyellow text-pantoneblack rounded-b-xl shadow mb-4 p-3 flex items-center justify-between relative">
                 <Link to="/" className="text-lg font-bold tracking-wide">RecetApp</Link>
@@ -39,6 +41,7 @@ function App() {
                   <Link to="/add" className="text-xs sm:text-sm px-2 py-1 rounded bg-pantonegreen hover:bg-pantoneyellow transition text-white block">Agregar</Link>
                   <Link to="/categories" className="text-xs sm:text-sm px-2 py-1 rounded bg-pantonegreen hover:bg-pantoneyellow transition text-white block">Categorías</Link>
                   <Link to="/ingredients" className="text-xs sm:text-sm px-2 py-1 rounded bg-pantonegreen hover:bg-pantoneyellow transition text-white block">Ingredientes</Link>
+                  <Link to="/mis-recetas" className="text-xs sm:text-sm px-2 py-1 rounded bg-pantonegreen hover:bg-pantoneyellow transition text-white block">Mis Recetas</Link>
                 </div>
               </nav>
               {/* Card general blanco */}
@@ -53,6 +56,8 @@ function App() {
                     <Route path="/recipe/:recipeId" element={<RecipePage />} />
                     <Route path="/categories" element={<RequireAuth><CategoriesPage /></RequireAuth>} />
                     <Route path="/ingredients" element={<RequireAuth><IngredientsPage /></RequireAuth>} />
+                    <Route path="/mis-recetas" element={<RequireAuth><MisRecetasPage /></RequireAuth>} />
+                    <Route path="/edit-recipe/:id" element={<RequireAuth><EditRecipePage /></RequireAuth>} />
                   </Routes>
                 </div>
               </div>
