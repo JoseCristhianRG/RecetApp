@@ -4,7 +4,7 @@
 
 body, .bg-pattern {
     background-color: #bfdf8e; /* color pantonebg */
-    background-image: url('../public/bg-pattern.png');
+    background-image: url('images/bg-pattern.png');
     background-repeat: repeat;
     background-size: 30%;
 }
