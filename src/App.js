@@ -24,10 +24,13 @@ function App() {
       <IngredientsProvider>
         <RecipesProvider>
           <div className="bg-pattern min-h-screen text-pantoneblack">
-            <div className="max-w-lg md:max-w-2xl xl:max-w-4xl mx-auto p-2 sm:p-4">
+            <div className="max-w-lg md:max-w-2xl xl:max-w-4xl mx-auto">
               {/* Menú hamburguesa */}
               <nav className="bg-pantoneyellow text-pantoneblack rounded-b-xl shadow mb-4 p-3 flex items-center justify-between relative">
-                <Link to="/" className="text-lg font-bold tracking-wide">RecetApp</Link>
+                <Link to="/" className="flex items-center" aria-label="Inicio">
+                  {/* Icono de chef desde images/icono.png */}
+                  <img src={require('./images/icono.png')} alt="Icono chef" className="w-9 h-9" />
+                </Link>
                 <button
                   className="sm:hidden flex flex-col justify-center items-center w-8 h-8 focus:outline-none"
                   onClick={() => setMenuOpen(!menuOpen)}
@@ -62,9 +65,6 @@ function App() {
                 </div>
               </div>
             </div>
-            <footer className="bg-pantonebrown text-pantoneblack text-xs text-center py-2 mt-4 rounded-t-xl">
-              © 2025 RecetApp
-            </footer>
           </div>
         </RecipesProvider>
       </IngredientsProvider>

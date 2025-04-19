@@ -1,3 +1,4 @@
+// Importaciones principales de React, hooks, contextos y dependencias de Firebase
 import React, { useState, useEffect, useContext } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { db } from '../firebase';
@@ -8,11 +9,15 @@ import { Switch } from '@headlessui/react';
 
 import { uploadImage } from '../firebase';
 
+// Componente para editar una receta existente
 function EditRecipePage() {
+  // Obtiene el ID de la receta desde la URL y navegación
   const { id } = useParams();
   const navigate = useNavigate();
+  // Obtiene las categorías y el usuario autenticado desde el contexto
   const { categories } = useContext(CategoriesContext);
   const { user } = useContext(AuthContext);
+  // Estados para los campos del formulario, pasos, imagen y control de errores
   const [loading, setLoading] = useState(true);
   const [name, setName] = useState('');
   const [category, setCategory] = useState('');
@@ -26,6 +31,7 @@ function EditRecipePage() {
   const [tags, setTags] = useState([]);
   const [errors, setErrors] = useState({});
 
+  // Efecto para cargar los datos de la receta y sus pasos desde Firestore
   useEffect(() => {
     async function fetchRecipe() {
       const recipeRef = doc(db, 'recipes', id);
@@ -62,6 +68,7 @@ function EditRecipePage() {
     fetchRecipe();
   }, [id]);
 
+  // Función de validación de campos del formulario
   const validate = () => {
     const newErrors = {};
     if (!name.trim()) newErrors.name = 'El nombre es obligatorio.';
@@ -73,6 +80,7 @@ function EditRecipePage() {
     return Object.keys(newErrors).length === 0;
   };
 
+  // Funciones para agregar y eliminar etiquetas
   const handleAddTag = () => {
     const newTag = tagInput.trim();
     if (newTag && !tags.includes(newTag)) {
@@ -84,6 +92,7 @@ function EditRecipePage() {
     setTags(tags.filter(t => t !== tag));
   };
 
+  // Maneja el envío del formulario para actualizar la receta y sus pasos
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validate()) return;
@@ -131,11 +140,12 @@ function EditRecipePage() {
   if (loading) return <div>Cargando...</div>;
 
   return (
+    // Layout principal del formulario de edición de receta
     <div className="p-6 py-3">
       <div className="max-w-4xl mx-auto bg-white p-6 sm:p-10 rounded shadow">
         <h1 className="text-2xl font-bold mb-4">Editar Receta</h1>
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* ...resto del formulario... */}
+          {/* Campo para el nombre de la receta */}
           <div>
             <input
               type="text"
@@ -146,6 +156,7 @@ function EditRecipePage() {
             />
             {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
           </div>
+          {/* Selector de categoría */}
           <div>
             <select
               value={category}
@@ -159,6 +170,7 @@ function EditRecipePage() {
             </select>
             {errors.category && <p className="text-red-500 text-xs mt-1">{errors.category}</p>}
           </div>
+          {/* Sección de ingredientes */}
           <div>
             <label className="block font-medium mb-1">Ingredientes</label>
             {ingredients.map((ing, idx) => (
@@ -181,6 +193,7 @@ function EditRecipePage() {
             <button type="button" onClick={() => setIngredients([...ingredients, ''])} className="text-xs text-pantonegreen underline">Agregar ingrediente</button>
             {errors.ingredients && <p className="text-red-500 text-xs mt-1">{errors.ingredients}</p>}
           </div>
+          {/* Sección de pasos */}
           <div>
             <label className="block font-medium mb-1">Pasos</label>
             {steps.map((step, idx) => (
@@ -226,6 +239,7 @@ function EditRecipePage() {
             <button type="button" onClick={() => setSteps([...steps, { title: '', description: '', image: null, imageUrl: '' }])} className="text-xs text-pantonegreen underline">Agregar paso</button>
             {(errors.steps || errors.stepsDesc) && <p className="text-red-500 text-xs mt-1">{errors.steps || errors.stepsDesc}</p>}
           </div>
+          {/* Campo para imagen principal */}
           <div>
             <input
               type="file"
@@ -236,6 +250,7 @@ function EditRecipePage() {
               <img src={imageUrl} alt="Receta" className="w-20 h-20 object-cover rounded mt-2" />
             )}
           </div>
+          {/* Switch de visibilidad */}
           <div>
             <label className="block font-medium mb-1">Visibilidad</label>
             <Switch
@@ -250,6 +265,7 @@ function EditRecipePage() {
             </Switch>
             <span className="ml-3 text-sm font-medium">{isPublic ? 'Pública' : 'Privada'}</span>
           </div>
+          {/* Switch de estado (publicada/borrador) */}
           <div>
             <label className="block font-medium mb-1">Estado</label>
             <Switch
@@ -264,6 +280,7 @@ function EditRecipePage() {
             </Switch>
             <span className="ml-3 text-sm font-medium">{status === 'published' ? 'Publicada' : 'Borrador'}</span>
           </div>
+          {/* Sección de etiquetas */}
           <div>
             <label className="block font-medium mb-1">Etiquetas</label>
             <div className="flex gap-2 mb-2">
@@ -291,6 +308,7 @@ function EditRecipePage() {
               ))}
             </div>
           </div>
+          {/* Botón para enviar el formulario */}
           <button
             type="submit"
             className="px-4 py-2 bg-blue-600 text-white rounded shadow hover:bg-blue-700 transition w-full"
@@ -303,4 +321,5 @@ function EditRecipePage() {
   );
 }
 
+// Exporta el componente para su uso en las rutas
 export default EditRecipePage;

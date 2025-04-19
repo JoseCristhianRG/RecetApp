@@ -1,16 +1,21 @@
+// Importaciones principales de React, hooks, contextos y dependencias de Firebase
 import React, { useState, useContext } from 'react';
 import { CategoriesContext } from '../CategoriesContext';
 import { addDoc, collection, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import Modal from '../components/Modal';
 
+// Componente para gestionar las categorías de recetas
 function CategoriesPage() {
+  // Obtiene las categorías desde el contexto
   const { categories } = useContext(CategoriesContext);
+  // Estados para el formulario, imagen, edición y modal
   const [name, setName] = useState('');
   const [image, setImage] = useState(null);
   const [editingId, setEditingId] = useState(null); // ID de la categoría que se está editando
   const [modal, setModal] = useState({ open: false, title: '', message: '', onConfirm: null });
 
+  // Maneja el envío del formulario para agregar o actualizar una categoría
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!name.trim()) {
@@ -58,18 +63,21 @@ function CategoriesPage() {
     }
   };
 
+  // Resetea el formulario a su estado inicial
   const resetForm = () => {
     setName('');
     setImage(null);
     setEditingId(null);
   };
 
+  // Maneja la edición de una categoría existente
   const handleEdit = (category) => {
     setName(category.name);
     setImage(null); // No cargamos la imagen existente
     setEditingId(category.id);
   };
 
+  // Maneja la eliminación de una categoría con confirmación en modal
   const handleDelete = (id) => {
     setModal({
       open: true,
@@ -83,8 +91,10 @@ function CategoriesPage() {
   };
 
   return (
+    // Layout principal de la página de categorías
     <div className="p-6 py-3">
       <h1 className="text-2xl font-bold mb-4">Categorías</h1>
+      {/* Formulario para agregar o editar una categoría */}
       <form onSubmit={handleSubmit} className="mb-6 space-y-4 bg-white/80 p-4 rounded shadow">
         <input
           type="text"
@@ -114,6 +124,7 @@ function CategoriesPage() {
           </button>
         )}
       </form>
+      {/* Lista de categorías existentes */}
       <ul className="grid grid-cols-1 gap-3">
         {categories.map((cat) => (
           <li key={cat.id} className="bg-white/80 rounded shadow p-3 flex items-center justify-between">
@@ -144,6 +155,7 @@ function CategoriesPage() {
           </li>
         ))}
       </ul>
+      {/* Modal de confirmación para eliminar */}
       <Modal
         isOpen={modal.open}
         title={modal.title}
@@ -165,4 +177,5 @@ function CategoriesPage() {
   );
 }
 
+// Exporta el componente para su uso en las rutas
 export default CategoriesPage;
