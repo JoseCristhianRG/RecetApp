@@ -1,14 +1,36 @@
-import React, { useContext } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { RecipesContext } from '../RecipesContext';
+import { db } from '../firebase';
+import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
+import { AuthContext } from '../AuthContext';
+import { Link } from 'react-router-dom';
 
 function RecipePage() {
   const { recipeId } = useParams();
   const { recipes } = useContext(RecipesContext);
+  const [steps, setSteps] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const { user } = React.useContext(AuthContext);
   const recipe = recipes.find((r) => r.id === recipeId);
 
+  useEffect(() => {
+    async function fetchSteps() {
+      if (!recipeId) return;
+      const q = query(
+        collection(db, 'steps'),
+        where('recipeId', '==', recipeId),
+        orderBy('order', 'asc')
+      );
+      const snap = await getDocs(q);
+      setSteps(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+      setLoading(false);
+    }
+    fetchSteps();
+  }, [recipeId]);
+
   if (!recipe) {
-    return <h2>Receta no encontrada</h2>;
+    return <h2 className="text-center text-2xl mt-10">Receta no encontrada</h2>;
   }
 
   return (
