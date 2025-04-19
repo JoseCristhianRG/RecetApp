@@ -83,7 +83,7 @@ function IngredientsPage() {
   };
 
   return (
-    <div>
+    <div className="p-6 py-3">
       <h1 className="text-2xl font-bold mb-4">Ingredientes</h1>
       <form onSubmit={handleSubmit} className="mb-6 space-y-4 bg-white/80 p-4 rounded shadow">
         <input

@@ -21,7 +21,7 @@ function CategoryPage() {
   }
 
   return (
-    <div>
+    <div className="p-6 py-3">
       <h1 className="text-2xl font-bold mb-4">Recetas de {categoryName}</h1>
       <ul className="space-y-2">
         {filtered.map((recipe) => (
