@@ -10,12 +10,13 @@ function HomePage() {
 
   useEffect(() => {
     const fetchLatestRecipes = async () => {
-      const q = query(collection(db, 'recipes'), orderBy('createdAt', 'desc'), limit(5));
+      const q = query(collection(db, 'recipes'), orderBy('createdAt', 'desc'));
       const querySnapshot = await getDocs(q);
-      const recipesData = querySnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
+      // Filtrar solo recetas públicas y publicadas, y limitar a 5
+      const recipesData = querySnapshot.docs
+        .map((doc) => ({ id: doc.id, ...doc.data() }))
+        .filter(r => r.isPublic && r.status === 'published')
+        .slice(0, 5);
       setLatestRecipes(recipesData);
     };
 
