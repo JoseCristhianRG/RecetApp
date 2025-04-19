@@ -135,8 +135,8 @@ function AddRecipePage() {
 
   return (
     // Layout principal del formulario de agregar receta
-    <div className="p-6">
-      <div className="max-w-md md:max-w-2xl xl:max-w-4xl mx-auto bg-white p-6 rounded">
+    <div className="p-7">
+      <div className="max-w-md md:max-w-2xl xl:max-w-4xl mx-auto bg-white rounded">
         <h1 className="text-2xl font-bold mb-4">Agregar Receta</h1>
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Campo para el nombre de la receta */}
@@ -150,7 +150,7 @@ function AddRecipePage() {
             />
             {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
           </div>
-          {/* Selector de categoría */}
+          {/* Campo Selector de categoría */}
           <div>
             <select
               value={category}
@@ -163,6 +163,15 @@ function AddRecipePage() {
               ))}
             </select>
             {errors.category && <p className="text-red-500 text-xs mt-1">{errors.category}</p>}
+          </div>
+          {/* Campo para imagen principal */}
+          <div>
+            <label className="block font-medium mb-1">Imagen principal</label>
+            <input
+              type="file"
+              onChange={(e) => setImage(e.target.files[0])}
+              className="w-full p-2 border rounded"
+            />
           </div>
           {/* Sección de ingredientes */}
           <div>
@@ -230,15 +239,7 @@ function AddRecipePage() {
             <button type="button" onClick={() => setSteps([...steps, { title: '', description: '', image: null }])} className="text-xs text-pantonegreen underline">Agregar paso</button>
             {(errors.steps || errors.stepsDesc) && <p className="text-red-500 text-xs mt-1">{errors.steps || errors.stepsDesc}</p>}
           </div>
-          {/* Campo para imagen principal */}
-          <div>
-            <input
-              type="file"
-              onChange={(e) => setImage(e.target.files[0])}
-              className="w-full p-2 border rounded"
-            />
-          </div>
-          {/* Switch de visibilidad */}
+                    {/* Switch de visibilidad */}
           <div>
             <label className="block font-medium mb-1">Visibilidad</label>
             <Switch

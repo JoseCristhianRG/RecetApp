@@ -5,7 +5,6 @@ import CategoryPage from './pages/CategoryPage';
 import RecipePage from './pages/RecipePage';
 import AddRecipePage from './pages/AddRecipePage';
 import CategoriesPage from './pages/CategoriesPage';
-import IngredientsPage from './pages/IngredientsPage';
 import MisRecetasPage from './pages/MisRecetasPage';
 import EditRecipePage from './pages/EditRecipePage';
 import { RecipesProvider } from './RecipesContext';
@@ -43,7 +42,6 @@ function App() {
                 <div className={`sm:flex gap-2 ${menuOpen ? 'flex flex-col absolute top-12 right-0 bg-pantoneyellow rounded shadow p-4 z-50' : 'hidden sm:flex'}`}>
                   <Link to="/add" className="text-xs sm:text-sm px-2 py-1 rounded bg-pantonegreen hover:bg-pantoneyellow transition text-white block">Agregar</Link>
                   <Link to="/categories" className="text-xs sm:text-sm px-2 py-1 rounded bg-pantonegreen hover:bg-pantoneyellow transition text-white block">Categorías</Link>
-                  <Link to="/ingredients" className="text-xs sm:text-sm px-2 py-1 rounded bg-pantonegreen hover:bg-pantoneyellow transition text-white block">Ingredientes</Link>
                   <Link to="/mis-recetas" className="text-xs sm:text-sm px-2 py-1 rounded bg-pantonegreen hover:bg-pantoneyellow transition text-white block">Mis Recetas</Link>
                 </div>
               </nav>
@@ -58,7 +56,6 @@ function App() {
                     <Route path="/category/:categoryId" element={<CategoryPage />} />
                     <Route path="/recipe/:recipeId" element={<RecipePage />} />
                     <Route path="/categories" element={<RequireAuth><CategoriesPage /></RequireAuth>} />
-                    <Route path="/ingredients" element={<RequireAuth><IngredientsPage /></RequireAuth>} />
                     <Route path="/mis-recetas" element={<RequireAuth><MisRecetasPage /></RequireAuth>} />
                     <Route path="/edit-recipe/:id" element={<RequireAuth><EditRecipePage /></RequireAuth>} />
                   </Routes>
