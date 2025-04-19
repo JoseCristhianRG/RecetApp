@@ -141,8 +141,8 @@ function EditRecipePage() {
 
   return (
     // Layout principal del formulario de edición de receta
-    <div className="p-6 py-3">
-      <div className="max-w-4xl mx-auto bg-white p-6 sm:p-10 rounded shadow">
+    <div className="p-7">
+      <div className="max-w-4xl mx-auto bg-white rounded">
         <h1 className="text-2xl font-bold mb-4">Editar Receta</h1>
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Campo para el nombre de la receta */}
@@ -165,10 +165,22 @@ function EditRecipePage() {
             >
               <option value="">Selecciona una categoría</option>
               {categories.map((cat) => (
-                <option key={cat.id} value={cat.name}>{cat.name}</option>
+              <option key={cat.id} value={cat.name}>{cat.name}</option>
               ))}
             </select>
             {errors.category && <p className="text-red-500 text-xs mt-1">{errors.category}</p>}
+          </div>
+          {/* Campo para imagen principal */}
+          <label className="block font-medium">Imagen principal</label>
+          <div className="flex flex-col gap-2 md:flex-row md:items-center md:gap-10">
+            <input
+              type="file"
+              onChange={(e) => setImage(e.target.files[0])}
+              className="p-2 border rounded"
+            />
+            {imageUrl && !image && (
+              <img src={imageUrl} alt="Receta" className="w-20 h-20 object-cover rounded" />
+            )}
           </div>
           {/* Sección de ingredientes */}
           <div>
@@ -239,17 +251,7 @@ function EditRecipePage() {
             <button type="button" onClick={() => setSteps([...steps, { title: '', description: '', image: null, imageUrl: '' }])} className="text-xs text-pantonegreen underline">Agregar paso</button>
             {(errors.steps || errors.stepsDesc) && <p className="text-red-500 text-xs mt-1">{errors.steps || errors.stepsDesc}</p>}
           </div>
-          {/* Campo para imagen principal */}
-          <div>
-            <input
-              type="file"
-              onChange={(e) => setImage(e.target.files[0])}
-              className="w-full p-2 border rounded"
-            />
-            {imageUrl && !image && (
-              <img src={imageUrl} alt="Receta" className="w-20 h-20 object-cover rounded mt-2" />
-            )}
-          </div>
+          
           {/* Switch de visibilidad */}
           <div>
             <label className="block font-medium mb-1">Visibilidad</label>

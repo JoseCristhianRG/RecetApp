@@ -2,6 +2,8 @@
 import React, { useState, useContext } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { AuthContext } from '../AuthContext';
+import { db } from '../firebase';
+import { setDoc, doc } from 'firebase/firestore';
 
 // Componente para la página de registro de usuario
 function SignupPage() {
@@ -16,7 +18,13 @@ function SignupPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await signup(email, password);
+      const userCredential = await signup(email, password);
+      // Guardar usuario en Firestore con rol 'user'
+      await setDoc(doc(db, 'users', userCredential.user.uid), {
+        email: userCredential.user.email,
+        role: 'user',
+        createdAt: new Date(),
+      });
       navigate('/');
     } catch (err) {
       alert(err.message);
