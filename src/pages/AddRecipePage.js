@@ -6,30 +6,20 @@ import { AuthContext } from '../AuthContext';
 import { Switch } from '@headlessui/react';
 
 function AddRecipePage() {
+  const { categories } = useContext(CategoriesContext);
+  const { user } = useContext(AuthContext);
   const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
+  const [category, setCategory] = useState('');
+  const [ingredients, setIngredients] = useState(['']);
+  const [steps, setSteps] = useState([
+    { title: '', description: '', image: null }
+  ]);
   const [image, setImage] = useState(null);
   const [errors, setErrors] = useState({});
-  const [category, setCategory] = useState('');
-  const { categories } = useContext(CategoriesContext);
-  const [ingredients, setIngredients] = useState(['']);
-  const [steps, setSteps] = useState([{ title: '', description: '', image: null }]);
   const [isPublic, setIsPublic] = useState(true);
   const [status, setStatus] = useState('draft');
-  const [tags, setTags] = useState([]);
   const [tagInput, setTagInput] = useState('');
-  const { user } = useContext(AuthContext);
-
-  const handleAddTag = () => {
-    const newTag = tagInput.trim();
-    if (newTag && !tags.includes(newTag)) {
-      setTags([...tags, newTag]);
-      setTagInput('');
-    }
-  };
-  const handleRemoveTag = (tag) => {
-    setTags(tags.filter(t => t !== tag));
-  };
+  const [tags, setTags] = useState([]);
 
   const validate = () => {
     const newErrors = {};
@@ -115,8 +105,24 @@ function AddRecipePage() {
       });
     }
     setName('');
-    setDescription('');
+    setCategory('');
+    setIngredients(['']);
+    setSteps([{ title: '', description: '', image: null }]);
     setImage(null);
+    setErrors({});
+    setTags([]);
+  };
+
+  const handleAddTag = () => {
+    const newTag = tagInput.trim();
+    if (newTag && !tags.includes(newTag)) {
+      setTags([...tags, newTag]);
+      setTagInput('');
+    }
+  };
+
+  const handleRemoveTag = (tag) => {
+    setTags(tags.filter(t => t !== tag));
   };
 
   return (

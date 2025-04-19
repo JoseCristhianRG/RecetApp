@@ -1,36 +1,36 @@
-import React, { useContext, useState, useEffect } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { RecipesContext } from '../RecipesContext';
+import { db } from '../firebase';
+import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
 import { AuthContext } from '../AuthContext';
 import { Link } from 'react-router-dom';
-import { collection, getDocs, query, where } from 'firebase/firestore';
-import { db } from '../firebase';
 
 function RecipePage() {
   const { recipeId } = useParams();
   const { recipes } = useContext(RecipesContext);
-  const { user } = useContext(AuthContext);
-  const recipe = recipes.find((r) => r.id === recipeId);
-
-  const [loading, setLoading] = useState(true);
   const [steps, setSteps] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const { user } = React.useContext(AuthContext);
+  const recipe = recipes.find((r) => r.id === recipeId);
 
   useEffect(() => {
     async function fetchSteps() {
       if (!recipeId) return;
-      const stepsQuery = query(collection(db, 'steps'), where('recipeId', '==', recipeId));
-      const stepsSnap = await getDocs(stepsQuery);
-      const stepsArr = stepsSnap.docs
-        .map(doc => ({ id: doc.id, ...doc.data() }))
-        .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-      setSteps(stepsArr);
+      const q = query(
+        collection(db, 'steps'),
+        where('recipeId', '==', recipeId),
+        orderBy('order', 'asc')
+      );
+      const snap = await getDocs(q);
+      setSteps(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
       setLoading(false);
     }
     fetchSteps();
   }, [recipeId]);
 
   if (!recipe) {
-    return <h2>Receta no encontrada</h2>;
+    return <h2 className="text-center text-2xl mt-10">Receta no encontrada</h2>;
   }
 
   return (
@@ -43,10 +43,17 @@ function RecipePage() {
             <h1 className="text-4xl font-bold mb-1 text-green-800">{recipe.name}</h1>
             <p className="text-gray-600 mb-2 italic text-lg">Categoría: {recipe.category}</p>
           </div>
-          {recipe.imageUrl && (
+          {recipe.imageUrl ? (
             <img
               src={recipe.imageUrl}
               alt={recipe.name}
+              className="w-full h-[400px] object-cover object-center m-0 p-0 border-0 rounded-none"
+              style={{ display: 'block' }}
+            />
+          ) : (
+            <img
+              src={require('../images/no_image.png')}
+              alt="Sin imagen"
               className="w-full h-[400px] object-cover object-center m-0 p-0 border-0 rounded-none"
               style={{ display: 'block' }}
             />

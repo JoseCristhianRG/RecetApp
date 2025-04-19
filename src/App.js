@@ -6,14 +6,14 @@ import RecipePage from './pages/RecipePage';
 import AddRecipePage from './pages/AddRecipePage';
 import CategoriesPage from './pages/CategoriesPage';
 import IngredientsPage from './pages/IngredientsPage';
+import MisRecetasPage from './pages/MisRecetasPage';
+import EditRecipePage from './pages/EditRecipePage';
 import { RecipesProvider } from './RecipesContext';
 import { CategoriesProvider } from './CategoriesContext';
 import { IngredientsProvider } from './IngredientsContext';
 import { AuthContext, RequireAuth } from './AuthContext';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
-import MisRecetasPage from './pages/MisRecetasPage';
-import EditRecipePage from './pages/EditRecipePage';
 
 function App() {
   const { user, signout } = useContext(AuthContext);
@@ -23,8 +23,8 @@ function App() {
     <CategoriesProvider>
       <IngredientsProvider>
         <RecipesProvider>
-          <div className="min-h-screen bg-pantonebg text-pantoneblack bg-pattern">
-            <div className="max-w-4xl mx-auto p-2 sm:p-8">
+          <div className="bg-pattern min-h-screen text-pantoneblack">
+            <div className="max-w-lg md:max-w-2xl xl:max-w-4xl mx-auto p-2 sm:p-4">
               {/* Menú hamburguesa */}
               <nav className="bg-pantoneyellow text-pantoneblack rounded-b-xl shadow mb-4 p-3 flex items-center justify-between relative">
                 <Link to="/" className="text-lg font-bold tracking-wide">RecetApp</Link>
@@ -41,7 +41,7 @@ function App() {
                   <Link to="/add" className="text-xs sm:text-sm px-2 py-1 rounded bg-pantonegreen hover:bg-pantoneyellow transition text-white block">Agregar</Link>
                   <Link to="/categories" className="text-xs sm:text-sm px-2 py-1 rounded bg-pantonegreen hover:bg-pantoneyellow transition text-white block">Categorías</Link>
                   <Link to="/ingredients" className="text-xs sm:text-sm px-2 py-1 rounded bg-pantonegreen hover:bg-pantoneyellow transition text-white block">Ingredientes</Link>
-                  <Link to="/mis-recetas" className="text-xs sm:text-sm px-2 py-1 rounded bg-pantonegreen hover:bg-pantoneyellow transition text-white block">Mis recetas</Link>
+                  <Link to="/mis-recetas" className="text-xs sm:text-sm px-2 py-1 rounded bg-pantonegreen hover:bg-pantoneyellow transition text-white block">Mis Recetas</Link>
                 </div>
               </nav>
               {/* Card general blanco */}

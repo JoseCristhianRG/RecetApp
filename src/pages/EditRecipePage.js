@@ -5,6 +5,7 @@ import { doc, getDoc, updateDoc, collection, getDocs, query, where, addDoc } fro
 import { CategoriesContext } from '../CategoriesContext';
 import { AuthContext } from '../AuthContext';
 import { Switch } from '@headlessui/react';
+
 import { uploadImage } from '../firebase';
 
 function EditRecipePage() {
