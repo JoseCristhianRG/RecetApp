@@ -10,6 +10,7 @@ function RecipeForm({
   title = 'Receta',
   submitText = 'Guardar',
   isEdit = false,
+  onFormChange, // Nuevo prop para detectar cambios
 }) {
   const [form, setForm] = useState({ ...initialValues });
   const [tagInput, setTagInput] = useState('');
@@ -17,6 +18,12 @@ function RecipeForm({
   useEffect(() => {
     setForm({ ...initialValues });
   }, [initialValues]);
+
+  // Notificar cambios al padre (AddRecipePage)
+  useEffect(() => {
+    if (onFormChange) onFormChange(form);
+    // eslint-disable-next-line
+  }, [form]);
 
   const handleChange = (field, value) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -242,6 +249,17 @@ function RecipeForm({
           </button>
         </form>
       </div>
+      {/* Botón flotante para guardar receta */}
+      <button
+        type="button"
+        onClick={() => onSubmit(form)}
+        className="fixed bottom-20 right-5 z-50 bg-white border-4 border-pantoneorange text-pantonegreen rounded-full shadow-lg w-16 h-16 flex items-center justify-center transition hover:bg-pantoneyellow hover:text-pantoneblack"
+        style={{ boxShadow: '0 4px 16px rgba(0,0,0,0.18)' }}
+        title="Guardar receta"
+      >
+        <span className="sr-only">Guardar receta</span>
+        <img src={require('../images/icono_guardar_receta.png')} alt="Guardar receta" className="w-10 h-10" />
+      </button>
     </div>
   );
 }
