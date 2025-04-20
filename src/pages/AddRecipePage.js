@@ -1,5 +1,5 @@
 // Importaciones principales de React, hooks, contextos y dependencias de Firebase
-import React, { useState, useContext, useMemo } from 'react';
+import React, { useState, useContext, useMemo, useEffect } from 'react';
 import { addDoc, collection, serverTimestamp, updateDoc } from 'firebase/firestore';
 import { db, uploadImage } from '../firebase';
 import { CategoriesContext } from '../CategoriesContext';
@@ -20,6 +20,46 @@ function AddRecipePage() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
+  // Clave para localStorage
+  const STORAGE_KEY = 'recetapp_add_recipe_draft';
+
+  // Cargar borrador guardado si existe
+  const getInitialValues = () => {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        // Asegura que los campos requeridos existen
+        return {
+          name: parsed.name || '',
+          category: parsed.category || '',
+          ingredients: Array.isArray(parsed.ingredients) ? parsed.ingredients : [''],
+          steps: Array.isArray(parsed.steps) && parsed.steps.length > 0 ? parsed.steps : [{ title: '', description: '', image: null, imageUrl: '' }],
+          image: null, // No se puede guardar el archivo en localStorage
+          imageUrl: parsed.imageUrl || '',
+          isPublic: typeof parsed.isPublic === 'boolean' ? parsed.isPublic : true,
+          status: parsed.status || 'draft',
+          tags: Array.isArray(parsed.tags) ? parsed.tags : [],
+        };
+      } catch {
+        // Si hay error, ignora y usa valores por defecto
+      }
+    }
+    return {
+      name: '',
+      category: '',
+      ingredients: [''],
+      steps: [{ title: '', description: '', image: null, imageUrl: '' }],
+      image: null,
+      imageUrl: '',
+      isPublic: true,
+      status: 'draft',
+      tags: [],
+    };
+  };
+
+  const [initialValues, setInitialValues] = useState(getInitialValues);
+
   // Función de validación de campos del formulario
   const validate = (form) => {
     const newErrors = {};
@@ -30,6 +70,17 @@ function AddRecipePage() {
     if (!form.steps[0].description.trim() || form.steps.some((s) => !s.description.trim())) newErrors.stepsDesc = 'Cada paso debe tener una descripción.';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
+  };
+
+  // Guardar borrador en localStorage al cambiar el formulario
+  const handleFormChange = (form) => {
+    // No guardar archivos (image, step.image)
+    const safeForm = {
+      ...form,
+      image: undefined,
+      steps: form.steps.map(({ image, ...rest }) => rest),
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(safeForm));
   };
 
   // Maneja el envío del formulario para agregar la receta y sus pasos
@@ -74,22 +125,16 @@ function AddRecipePage() {
       }
       setCreatedRecipeId(recipeRef.id);
       setModalOpen(true);
+      localStorage.removeItem(STORAGE_KEY);
     } finally {
       setLoading(false);
     }
   };
 
-  const initialValues = useMemo(() => ({
-    name: '',
-    category: '',
-    ingredients: [''],
-    steps: [{ title: '', description: '', image: null, imageUrl: '' }],
-    image: null,
-    imageUrl: '',
-    isPublic: true,
-    status: 'draft',
-    tags: [],
-  }), []);
+  // Si cambia la ruta, recarga el borrador (por si el usuario vuelve a la página)
+  useEffect(() => {
+    setInitialValues(getInitialValues());
+  }, []);
 
   return (
     <>
@@ -109,6 +154,7 @@ function AddRecipePage() {
         onSubmit={handleSubmit}
         title="Agregar Receta"
         submitText="Agregar receta"
+        onFormChange={handleFormChange}
       />
       <Modal
         isOpen={modalOpen}

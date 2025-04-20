@@ -1,5 +1,5 @@
 import React, { useContext, useState, useEffect } from 'react';
-import { Routes, Route, Link, useNavigate } from 'react-router-dom';
+import { Routes, Route, Link, useNavigate, useLocation } from 'react-router-dom';
 import HomePage from './pages/HomePage';
 import CategoryPage from './pages/CategoryPage';
 import RecipePage from './pages/RecipePage';
@@ -26,6 +26,7 @@ function App() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [userPhoto, setUserPhoto] = useState(null);
   const navigate = useNavigate();
+  const location = useLocation(); // <-- Añadido para saber la ruta actual
 
   useEffect(() => {
     if (!user) {
@@ -121,7 +122,7 @@ function App() {
             </div>
             <BottomNavBar />
             {/* Botón flotante para añadir receta */}
-            {user && (
+            {user && !location.pathname.startsWith('/add') && !location.pathname.startsWith('/edit-recipe') && (
               <button
                 onClick={() => navigate('/add')}
                 className="fixed bottom-20 right-5 z-50 bg-white border-4 border-pantoneorange text-pantoneorange rounded-full shadow-lg w-16 h-16 flex items-center justify-center transition hover:bg-pantoneyellow hover:text-pantoneblack"
