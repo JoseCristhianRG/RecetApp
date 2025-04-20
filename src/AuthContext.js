@@ -8,7 +8,7 @@ import {
 } from 'firebase/auth';
 import { Navigate } from 'react-router-dom';
 import { db } from './firebase';
-import { getDoc, doc as docRef } from 'firebase/firestore';
+import { getDoc, doc as docRef, setDoc } from 'firebase/firestore';
 
 // Context for authentication state and methods
 export const AuthContext = createContext({
@@ -31,7 +31,9 @@ export function AuthProvider({ children }) {
         // Obtener el rol del usuario desde Firestore
         try {
           const snap = await getDoc(docRef(db, 'users', firebaseUser.uid));
-          setUserRole(snap.data()?.role || null);
+          if (snap.exists()) {
+            setUserRole(snap.data()?.role || null);
+          }
         } catch {
           setUserRole(null);
         }
@@ -60,13 +62,14 @@ export function AuthProvider({ children }) {
 
 // Component to require authentication for routes
 export function RequireAuth({ children, requiredRole }) {
+  console.log('RequireAuth', { requiredRole });
   const { user, userRole } = useContext(AuthContext);
   // Check if user is authenticated
   if (!user) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/" replace />;
   }
   if (requiredRole && userRole !== requiredRole) {
-    return <div>No autorizado</div>;
+    return <Navigate to="/" replace />;
   }
   return children;
 }

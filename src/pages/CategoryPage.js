@@ -3,6 +3,7 @@ import React, { useContext } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { RecipesContext } from '../RecipesContext';
 import { CategoriesContext } from '../CategoriesContext';
+import RecipeCard from '../components/RecipeCard';
 
 // Componente para mostrar recetas por categoría
 function CategoryPage() {
@@ -31,19 +32,12 @@ function CategoryPage() {
     // Layout principal de la página de recetas por categoría
     <div className="p-6 py-3">
       <h1 className="text-2xl font-bold mb-4">Recetas de {categoryName}</h1>
-      {/* Lista de recetas filtradas por categoría */}
-      <ul className="space-y-2">
+      {/* Lista de recetas filtradas por categoría usando RecipeCard */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {filtered.map((recipe) => (
-          <li key={recipe.id}>
-            <Link
-              to={`/recipe/${recipe.id}`}
-              className="block p-4 bg-white rounded shadow hover:bg-gray-50 transition"
-            >
-              {recipe.name}
-            </Link>
-          </li>
+          <RecipeCard key={recipe.id} recipe={recipe} />
         ))}
-      </ul>
+      </div>
     </div>
   );
 }

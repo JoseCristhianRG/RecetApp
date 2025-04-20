@@ -16,3 +16,12 @@ body, .bg-pattern {
   border-radius: 0px 10px 0px 0px;
   background-color: rgba(255, 255, 255, 0.85);
 }
+
+.modal-close-btn {
+  top: 0;
+  right: 0;
+  padding: 0 0.9rem;
+  font-size: 28px !important;
+  color: #ef4444;
+  font-weight: bold;
+}

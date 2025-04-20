@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { CategoriesContext } from '../CategoriesContext';
 import { collection, query, orderBy, limit, getDocs } from 'firebase/firestore';
 import { db } from '../firebase';
+import RecipeCard from '../components/RecipeCard';
 
 // Componente principal de la página de inicio
 function HomePage() {
@@ -32,27 +33,12 @@ function HomePage() {
     // Layout principal de la página de inicio
     <div className="p-6 py-3">
       <h2 className="text-xl font-bold mb-4">Últimas recetas añadidas</h2>
-      {/* Lista de las últimas recetas */}
-      <ul className="grid grid-cols-1 gap-3">
+      {/* Lista de las últimas recetas con tarjetas visuales */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
         {latestRecipes.map((recipe) => (
-          <li key={recipe.id} className="bg-white/80 rounded shadow p-3 flex items-center">
-            {recipe.image && (
-              <img
-                src={recipe.image}
-                alt={recipe.name}
-                className="w-12 h-12 object-cover rounded-full mr-3 border-2 border-pantonebrown"
-              />
-            )}
-            <div>
-              <Link to={`/recipe/${recipe.id}`} className="text-base font-bold text-pantoneblack hover:underline">
-                {recipe.name}
-              </Link>
-              <p className="text-xs text-pantonebrown">{recipe.description}</p>
-            </div>
-          </li>
+          <RecipeCard key={recipe.id} recipe={recipe} />
         ))}
-      </ul>
-
+      </div>
       <h1 className="text-2xl font-bold mt-8 mb-4">Categorías de recetas</h1>
       {/* Lista de categorías */}
       <ul className="grid grid-cols-1 gap-3">
