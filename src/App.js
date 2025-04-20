@@ -1,5 +1,5 @@
 import React, { useContext, useState, useEffect } from 'react';
-import { Routes, Route, Link } from 'react-router-dom';
+import { Routes, Route, Link, useNavigate } from 'react-router-dom';
 import HomePage from './pages/HomePage';
 import CategoryPage from './pages/CategoryPage';
 import RecipePage from './pages/RecipePage';
@@ -16,76 +16,121 @@ import LoginPage from './pages/LoginPage';
 import { Navigate } from 'react-router-dom';
 import SignupPage from './pages/SignupPage';
 import UsersPage from './pages/admin/UsersPage';
+import UserProfilePage from './pages/UserProfilePage';
+import { db } from './firebase';
+import { doc, getDoc } from 'firebase/firestore';
+import BottomNavBar from './components/BottomNavBar';
 
 function App() {
   const { user, signout, userRole } = useContext(AuthContext);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [userPhoto, setUserPhoto] = useState(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!user) {
+      setUserPhoto(null);
+      return;
+    }
+    const fetchPhoto = async () => {
+      const userDoc = await getDoc(doc(db, 'users', user.uid));
+      if (userDoc.exists()) {
+        setUserPhoto(userDoc.data().photoURL || null);
+      } else {
+        setUserPhoto(null);
+      }
+    };
+    fetchPhoto();
+  }, [user]);
 
   return (
     <CategoriesProvider>
       <IngredientsProvider>
         <RecipesProvider>
           <div className="bg-pattern min-h-screen text-pantoneblack">
-            <div className="max-w-lg md:max-w-2xl xl:max-w-4xl mx-auto">
-              {/* Menú hamburguesa */}
-              <nav className="bg-pantoneyellow text-pantoneblack rounded-b-xl shadow mb-4 p-3 flex items-center justify-between relative">
-                <Link to="/" className="flex items-center" aria-label="Inicio">
-                  {/* Icono de chef desde images/icono.png */}
-                  <img src={require('./images/icono.png')} alt="Icono chef" className="w-9 h-9" />
-                </Link>
-                <button
-                  className="sm:hidden flex flex-col justify-center items-center w-8 h-8 focus:outline-none"
-                  onClick={() => setMenuOpen(!menuOpen)}
-                  aria-label="Abrir menú"
-                >
-                  <span className={`block h-1 w-6 bg-pantoneblack rounded transition-all duration-300 ${menuOpen ? 'rotate-45 translate-y-2' : ''}`}></span>
-                  <span className={`block h-1 w-6 bg-pantoneblack rounded my-1 transition-all duration-300 ${menuOpen ? 'opacity-0' : ''}`}></span>
-                  <span className={`block h-1 w-6 bg-pantoneblack rounded transition-all duration-300 ${menuOpen ? '-rotate-45 -translate-y-2' : ''}`}></span>
-                </button>
-                <div className={`sm:flex gap-2 ${menuOpen ? 'flex flex-col absolute top-12 right-0 bg-pantoneyellow rounded shadow p-4 z-50' : 'hidden sm:flex'}`}>
+            {/* Header moderno */}
+            <header className="bg-white/90 shadow-sm sticky top-0 z-30">
+              <nav className="mx-auto flex max-w-7xl items-center justify-between p-4 lg:px-8" aria-label="Main">
+                <div className="flex items-center gap-3">
+                  <Link to="/" className="flex items-center gap-2" aria-label="Inicio">
+                    <img src={require('./images/icono.png')} alt="Logo" className="h-10 w-10 rounded-full border border-pantonegreen" />
+                    <span className="font-bold text-xl text-pantonegreen tracking-tight">RecetApp</span>
+                  </Link>
+                </div>
+                <div className="flex items-center gap-2 lg:hidden">
+                  {user && (
+                    <Link to="/perfil" className="flex items-center group" title="Mi Perfil">
+                      <img
+                        src={userPhoto || require('./images/icono.png')}
+                        alt="Avatar"
+                        className="w-9 h-9 rounded-full border-2 border-pantonegreen object-cover group-hover:opacity-80 transition"
+                      />
+                    </Link>
+                  )}
+                </div>
+                {/* Links desktop */}
+                <div className="hidden lg:flex gap-2 items-center">
                   {!user ? (
-                    <Link to="/login" className="text-xs sm:text-sm px-2 py-1 rounded bg-pantonegreen hover:bg-pantoneyellow transition text-white block">Iniciar sesión</Link>
+                    <Link to="/login" className="text-sm font-semibold leading-6 text-pantonegreen hover:text-pantonebrown transition">Iniciar sesión</Link>
                   ) : (
                     <>
-                      <Link to="/add" className="text-xs sm:text-sm px-2 py-1 rounded bg-pantonegreen hover:bg-pantoneyellow transition text-white block">Agregar receta</Link>
+                      <Link to="/add" className="text-sm font-semibold leading-6 text-pantonegreen hover:text-pantonebrown transition">Agregar receta</Link>
                       {userRole === 'admin' && (
-                        <Link to="/categories" className="text-xs sm:text-sm px-2 py-1 rounded bg-pantonegreen hover:bg-pantoneyellow transition text-white block">Categorías</Link>
+                        <Link to="/categories" className="text-sm font-semibold leading-6 text-pantonegreen hover:text-pantonebrown transition">Categorías</Link>
                       )}
-                      <Link to="/mis-recetas" className="text-xs sm:text-sm px-2 py-1 rounded bg-pantonegreen hover:bg-pantoneyellow transition text-white block">Mis Recetas</Link>
-                      <Link to="/mis-favoritos" className="text-xs sm:text-sm px-2 py-1 rounded bg-pantonegreen hover:bg-pantoneyellow transition text-white block">Mis Favoritos</Link>
+                      <Link to="/mis-recetas" className="text-sm font-semibold leading-6 text-pantonegreen hover:text-pantonebrown transition">Mis Recetas</Link>
+                      <Link to="/mis-favoritos" className="text-sm font-semibold leading-6 text-pantonegreen hover:text-pantonebrown transition">Mis Favoritos</Link>
                       {userRole === 'admin' && (
-                        <Link to="/admin/usuarios" className="text-xs sm:text-sm px-2 py-1 rounded bg-pantonebrown hover:bg-pantoneyellow transition text-white block">Usuarios</Link>
+                        <Link to="/admin/usuarios" className="text-sm font-semibold leading-6 text-pantonebrown hover:text-pantonegreen transition">Usuarios</Link>
                       )}
-                      <button
-                        onClick={signout}
-                        className="text-xs sm:text-sm px-2 py-1 rounded bg-red-500 hover:bg-red-700 transition text-white block text-left"
-                      >
-                        Cerrar sesión
-                      </button>
+                      {/* Avatar usuario a la derecha */}
+                      <Link to="/perfil" className="ml-4 flex items-center group" title="Mi Perfil">
+                        <img
+                          src={userPhoto || require('./images/icono.png')}
+                          alt="Avatar"
+                          className="w-9 h-9 rounded-full border-2 border-pantonegreen object-cover group-hover:opacity-80 transition"
+                        />
+                      </Link>
                     </>
                   )}
                 </div>
               </nav>
-              {/* Card general blanco */}
-              <div className="bg-white rounded-xl shadow-lg">
-                <div className="">
-                  <Routes>
-                    <Route path="/login" element={<LoginPage />} />
-                    <Route path="/signup" element={<SignupPage />} />
-                    <Route path="/" element={<HomePage />} />
-                    <Route path="/add" element={<RequireAuth><AddRecipePage /></RequireAuth>} />
-                    <Route path="/category/:categoryId" element={<CategoryPage />} />
-                    <Route path="/recipe/:recipeId" element={<RecipePage />} />
-                    <Route path="/categories" element={<RequireAuth><AdminRoute><CategoriesPage /></AdminRoute></RequireAuth>} />
-                    <Route path="/mis-recetas" element={<RequireAuth><MisRecetasPage /></RequireAuth>} />
-                    <Route path="/mis-favoritos" element={<RequireAuth><MisFavoritosPage /></RequireAuth>} />
-                    <Route path="/edit-recipe/:id" element={<RequireAuth><EditRecipePage /></RequireAuth>} />
-                    {/* Ruta protegida solo para admins */}
-                    <Route path="/admin/usuarios" element={<RequireAuth><AdminRoute><UsersPage /></AdminRoute></RequireAuth>} />
-                  </Routes>
-                </div>
+              {/* Menú mobile */}
+              {/* Eliminado menú hamburguesa y menú mobile, ya no es necesario */}
+            </header>
+            {/* Card general blanco */}
+            <div className="bg-white rounded-xl shadow-lg max-w-lg md:max-w-2xl xl:max-w-4xl mx-auto mt-8" style={{ marginBottom: '50px' }}>
+              <div className="">
+                <Routes>
+                  <Route path="/login" element={<LoginPage />} />
+                  <Route path="/signup" element={<SignupPage />} />
+                  <Route path="/" element={<HomePage />} />
+                  <Route path="/add" element={<RequireAuth><AddRecipePage /></RequireAuth>} />
+                  <Route path="/category/:categoryId" element={<CategoryPage />} />
+                  <Route path="/recipe/:recipeId" element={<RecipePage />} />
+                  <Route path="/categories" element={<RequireAuth><AdminRoute><CategoriesPage /></AdminRoute></RequireAuth>} />
+                  <Route path="/mis-recetas" element={<RequireAuth><MisRecetasPage /></RequireAuth>} />
+                  <Route path="/mis-favoritos" element={<RequireAuth><MisFavoritosPage /></RequireAuth>} />
+                  <Route path="/edit-recipe/:id" element={<RequireAuth><EditRecipePage /></RequireAuth>} />
+                  {/* Ruta protegida solo para admins */}
+                  <Route path="/admin/usuarios" element={<RequireAuth><AdminRoute><UsersPage /></AdminRoute></RequireAuth>} />
+                  {/* Ruta de perfil de usuario */}
+                  <Route path="/perfil" element={<RequireAuth><UserProfilePage /></RequireAuth>} />
+                </Routes>
               </div>
             </div>
+            <BottomNavBar />
+            {/* Botón flotante para añadir receta */}
+            {user && (
+              <button
+                onClick={() => navigate('/add')}
+                className="fixed bottom-20 right-5 z-50 bg-white border-4 border-pantoneorange text-pantoneorange rounded-full shadow-lg w-16 h-16 flex items-center justify-center transition hover:bg-pantoneyellow hover:text-pantoneblack"
+                title="Añadir receta"
+                style={{ boxShadow: '0 4px 16px rgba(0,0,0,0.18)' }}
+              >
+                <img src={require('./images/icono_add_receta.png')} alt="Añadir receta" className="w-10 h-10" />
+              </button>
+            )}
           </div>
         </RecipesProvider>
       </IngredientsProvider>
