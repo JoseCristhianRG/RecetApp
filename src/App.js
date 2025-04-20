@@ -54,21 +54,15 @@ function App() {
                       {userRole === 'admin' && (
                         <Link to="/admin/usuarios" className="text-xs sm:text-sm px-2 py-1 rounded bg-pantonebrown hover:bg-pantoneyellow transition text-white block">Usuarios</Link>
                       )}
+                      <button
+                        onClick={signout}
+                        className="text-xs sm:text-sm px-2 py-1 rounded bg-red-500 hover:bg-red-700 transition text-white block text-left"
+                      >
+                        Cerrar sesión
+                      </button>
                     </>
                   )}
                 </div>
-                {/* Botón de cerrar sesión si el usuario está autenticado */}
-                {user && (
-                  <button
-                    onClick={signout}
-                    title="Cerrar sesión"
-                    className="ml-2 p-1 rounded hover:bg-red-100 focus:outline-none"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H7a2 2 0 01-2-2V7a2 2 0 012-2h4a2 2 0 012 2v1" />
-                    </svg>
-                  </button>
-                )}
               </nav>
               {/* Card general blanco */}
               <div className="bg-white rounded-xl shadow-lg">
