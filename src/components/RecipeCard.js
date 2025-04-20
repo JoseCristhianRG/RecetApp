@@ -71,19 +71,21 @@ function RecipeCard({ recipe }) {
         <div className="p-4 flex-1 flex flex-col">
           <div className="flex items-center justify-between mb-1">
             <h3 className="text-lg font-bold text-pantoneblack line-clamp-1">{recipe.name}</h3>
-            {user && (
-              <button
-                type="button"
-                onClick={handleToggleFavorite}
-                className="ml-2"
-                aria-label={isFavorite ? 'Quitar de favoritos' : 'Agregar a favoritos'}
-                disabled={loadingFav}
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" fill={isFavorite ? '#F43F5E' : 'none'} viewBox="0 0 24 24" strokeWidth={1.5} stroke="#F43F5E" className="w-7 h-7 drop-shadow">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M21.752 7.592c0-2.386-1.93-4.316-4.316-4.316-1.31 0-2.617.617-3.436 1.617-.82-1-2.127-1.617-3.436-1.617-2.386 0-4.316 1.93-4.316 4.316 0 4.09 7.752 9.408 7.752 9.408s7.752-5.318 7.752-9.408z" />
-                </svg>
-              </button>
-            )}
+            <div className="flex items-center gap-2">
+              {user && (
+                <button
+                  type="button"
+                  onClick={handleToggleFavorite}
+                  className="ml-2"
+                  aria-label={isFavorite ? 'Quitar de favoritos' : 'Agregar a favoritos'}
+                  disabled={loadingFav}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" fill={isFavorite ? '#F43F5E' : 'none'} viewBox="0 0 24 24" strokeWidth={1.5} stroke="#F43F5E" className="w-7 h-7 drop-shadow">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M21.752 7.592c0-2.386-1.93-4.316-4.316-4.316-1.31 0-2.617.617-3.436 1.617-.82-1-2.127-1.617-3.436-1.617-2.386 0-4.316 1.93-4.316 4.316 0 4.09 7.752 9.408 7.752 9.408s7.752-5.318 7.752-9.408z" />
+                  </svg>
+                </button>
+              )}
+            </div>
           </div>
           <p className="text-xs text-pantonebrown mb-2 line-clamp-2">{recipe.description}</p>
           <div className="flex flex-wrap items-center gap-2 mb-4">

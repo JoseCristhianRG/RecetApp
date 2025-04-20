@@ -6,6 +6,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import Modal from '../components/Modal';
 import { deleteDoc, doc } from 'firebase/firestore';
 import { db } from '../firebase';
+import RecipeCard from '../components/RecipeCard';
 
 // Componente para mostrar las recetas creadas por el usuario
 function MisRecetasPage() {
@@ -31,35 +32,36 @@ function MisRecetasPage() {
       {myRecipes.length === 0 ? (
         <p>No has creado ninguna receta aún.</p>
       ) : (
-        // Si hay recetas, muestra la lista
-        <ul className="space-y-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {myRecipes.map(recipe => (
-            <li key={recipe.id} className="bg-white/80 rounded shadow p-3 flex items-center justify-between">
-              <div className="flex items-center">
-                {recipe.imageUrl && (
-                  <img src={recipe.imageUrl} alt={recipe.name} className="w-12 h-12 object-cover rounded-full mr-3 border-2 border-pantonebrown" />
-                )}
-                <Link to={`/recipe/${recipe.id}`} className="text-lg font-bold text-pantoneblack hover:underline">
-                  {recipe.name}
-                </Link>
-              </div>
-              <div className="flex gap-2">
+            <div key={recipe.id} className="relative group">
+              <RecipeCard recipe={recipe} />
+              {/* Indicador de visibilidad solo en Mis Recetas */}
+              {typeof recipe.isPublic === 'boolean' && (
+                <span className={`absolute top-2 left-2 text-xs font-semibold px-2 py-0.5 rounded shadow border z-10 ${recipe.isPublic ? 'bg-green-100 text-green-700 border-green-300' : 'bg-red-100 text-red-700 border-red-300'}`}
+                  title={recipe.isPublic ? 'Pública' : 'Privada'}>
+                  {recipe.isPublic ? 'Pública' : 'Privada'}
+                </span>
+              )}
+              <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition">
                 <button
                   onClick={() => navigate(`/edit-recipe/${recipe.id}`)}
-                  className="px-2 py-1 bg-pantoneyellow text-pantoneblack rounded hover:bg-pantonegreen transition"
+                  className="px-2 py-1 bg-pantoneyellow text-pantoneblack rounded hover:bg-pantonegreen transition text-xs font-bold shadow"
+                  title="Editar"
                 >
                   Editar
                 </button>
                 <button
                   onClick={() => setModal({ open: true, recipeId: recipe.id, recipeName: recipe.name })}
-                  className="px-2 py-1 bg-red-500 text-white rounded hover:bg-red-700 transition"
+                  className="px-2 py-1 bg-red-500 text-white rounded hover:bg-red-700 transition text-xs font-bold shadow"
+                  title="Eliminar"
                 >
                   Eliminar
                 </button>
               </div>
-            </li>
+            </div>
           ))}
-        </ul>
+        </div>
       )}
       <Modal
         isOpen={modal.open}
