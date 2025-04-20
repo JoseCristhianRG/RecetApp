@@ -5,6 +5,7 @@ import { CategoriesContext } from '../CategoriesContext';
 import { collection, query, orderBy, limit, getDocs } from 'firebase/firestore';
 import { db } from '../firebase';
 import RecipeCard from '../components/RecipeCard';
+import CategoryCard from '../components/CategoryCard';
 
 // Componente principal de la página de inicio
 function HomePage() {
@@ -41,22 +42,11 @@ function HomePage() {
       </div>
       <h1 className="text-2xl font-bold mt-8 mb-4">Categorías de recetas</h1>
       {/* Lista de categorías */}
-      <ul className="grid grid-cols-1 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {categories.map((cat) => (
-          <li key={cat.id} className="bg-white/80 rounded shadow p-3 flex items-center">
-            {cat.image && (
-              <img
-                src={cat.image}
-                alt={cat.name}
-                className="w-12 h-12 object-cover rounded-full mr-3 border-2 border-pantonebrown"
-              />
-            )}
-            <Link to={`/category/${cat.id}`} className="text-lg font-bold text-pantoneblack hover:underline">
-              {cat.name}
-            </Link>
-          </li>
+          <CategoryCard key={cat.id} category={cat} onClick={() => navigate(`/category/${cat.id}`)} />
         ))}
-      </ul>
+      </div>
     </div>
   );
 }
