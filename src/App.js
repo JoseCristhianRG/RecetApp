@@ -99,7 +99,7 @@ function App() {
               {/* Eliminado menú hamburguesa y menú mobile, ya no es necesario */}
             </header>
             {/* Card general blanco */}
-            <div className="bg-white rounded-xl shadow-lg max-w-lg md:max-w-2xl xl:max-w-4xl mx-auto mt-8" style={{ marginBottom: '50px' }}>
+            <div className="bg-white rounded-xl shadow-lg max-w-lg md:max-w-2xl xl:max-w-4xl mx-auto mt-4 pt-2" style={{ marginBottom: '100px' }}>
               <div className="">
                 <Routes>
                   <Route path="/login" element={<LoginPage />} />
