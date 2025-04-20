@@ -3,6 +3,9 @@ import React, { useContext } from 'react';
 import { RecipesContext } from '../RecipesContext';
 import { AuthContext } from '../AuthContext';
 import { Link, useNavigate } from 'react-router-dom';
+import Modal from '../components/Modal';
+import { deleteDoc, doc } from 'firebase/firestore';
+import { db } from '../firebase';
 
 // Componente para mostrar las recetas creadas por el usuario
 function MisRecetasPage() {
@@ -10,6 +13,12 @@ function MisRecetasPage() {
   const { recipes } = useContext(RecipesContext);
   const { user } = useContext(AuthContext);
   const navigate = useNavigate();
+  const [modal, setModal] = React.useState({ open: false, recipeId: null, recipeName: '' });
+
+  const handleDelete = async (id) => {
+    await deleteDoc(doc(db, 'recipes', id));
+    setModal({ open: false, recipeId: null, recipeName: '' });
+  };
 
   // Filtra las recetas creadas por el usuario actual
   const myRecipes = recipes.filter(r => r.createdBy === user?.uid);
@@ -41,11 +50,33 @@ function MisRecetasPage() {
                 >
                   Editar
                 </button>
+                <button
+                  onClick={() => setModal({ open: true, recipeId: recipe.id, recipeName: recipe.name })}
+                  className="px-2 py-1 bg-red-500 text-white rounded hover:bg-red-700 transition"
+                >
+                  Eliminar
+                </button>
               </div>
             </li>
           ))}
         </ul>
       )}
+      <Modal
+        isOpen={modal.open}
+        title="Eliminar receta"
+        subtitle="Esta acción no se puede deshacer"
+        onClose={() => setModal({ open: false, recipeId: null, recipeName: '' })}
+        actions={
+          <button
+            onClick={() => handleDelete(modal.recipeId)}
+            className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-700 transition font-bold w-full"
+          >
+            Confirmar eliminación
+          </button>
+        }
+      >
+        ¿Estás seguro de que deseas eliminar la receta "{modal.recipeName}"?
+      </Modal>
     </div>
   );
 }
