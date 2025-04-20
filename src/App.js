@@ -6,6 +6,7 @@ import RecipePage from './pages/RecipePage';
 import AddRecipePage from './pages/AddRecipePage';
 import CategoriesPage from './pages/CategoriesPage';
 import MisRecetasPage from './pages/MisRecetasPage';
+import MisFavoritosPage from './pages/MisFavoritosPage';
 import EditRecipePage from './pages/EditRecipePage';
 import { RecipesProvider } from './RecipesContext';
 import { CategoriesProvider } from './CategoriesContext';
@@ -51,6 +52,7 @@ function App() {
                         <Link to="/categories" className="text-xs sm:text-sm px-2 py-1 rounded bg-pantonegreen hover:bg-pantoneyellow transition text-white block">Categorías</Link>
                       )}
                       <Link to="/mis-recetas" className="text-xs sm:text-sm px-2 py-1 rounded bg-pantonegreen hover:bg-pantoneyellow transition text-white block">Mis Recetas</Link>
+                      <Link to="/mis-favoritos" className="text-xs sm:text-sm px-2 py-1 rounded bg-pantonegreen hover:bg-pantoneyellow transition text-white block">Mis Favoritos</Link>
                       {userRole === 'admin' && (
                         <Link to="/admin/usuarios" className="text-xs sm:text-sm px-2 py-1 rounded bg-pantonebrown hover:bg-pantoneyellow transition text-white block">Usuarios</Link>
                       )}
@@ -76,6 +78,7 @@ function App() {
                     <Route path="/recipe/:recipeId" element={<RecipePage />} />
                     <Route path="/categories" element={<RequireAuth><AdminRoute><CategoriesPage /></AdminRoute></RequireAuth>} />
                     <Route path="/mis-recetas" element={<RequireAuth><MisRecetasPage /></RequireAuth>} />
+                    <Route path="/mis-favoritos" element={<RequireAuth><MisFavoritosPage /></RequireAuth>} />
                     <Route path="/edit-recipe/:id" element={<RequireAuth><EditRecipePage /></RequireAuth>} />
                     {/* Ruta protegida solo para admins */}
                     <Route path="/admin/usuarios" element={<RequireAuth><AdminRoute><UsersPage /></AdminRoute></RequireAuth>} />
