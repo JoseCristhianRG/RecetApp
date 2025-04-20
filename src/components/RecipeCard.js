@@ -1,9 +1,61 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import Modal from './Modal';
+import { AuthContext } from '../AuthContext';
+import { db } from '../firebase';
+import { doc, setDoc, deleteDoc, getDoc, collection, query, where, getDocs, addDoc } from 'firebase/firestore';
 
 function RecipeCard({ recipe }) {
+  const { user } = React.useContext(AuthContext);
   const [modalOpen, setModalOpen] = React.useState(false);
+  const [isFavorite, setIsFavorite] = React.useState(false);
+  const [loadingFav, setLoadingFav] = React.useState(false);
+
+  React.useEffect(() => {
+    if (!user && !recipe.id) return;
+    // Comprobar si el usuario ha marcado como favorito
+    const checkFavorite = async () => {
+      if (!user) {
+        setIsFavorite(false);
+        return;
+      }
+      const favQuery = query(
+        collection(db, 'favorites'),
+        where('userId', '==', user.uid),
+        where('recipeId', '==', recipe.id)
+      );
+      const favSnap = await getDocs(favQuery);
+      setIsFavorite(!favSnap.empty);
+    };
+    checkFavorite();
+  }, [user, recipe.id]);
+
+  const handleToggleFavorite = async (e) => {
+    e.preventDefault();
+    if (!user) return;
+    setLoadingFav(true);
+    const favQuery = query(
+      collection(db, 'favorites'),
+      where('userId', '==', user.uid),
+      where('recipeId', '==', recipe.id)
+    );
+    const favSnap = await getDocs(favQuery);
+    if (!favSnap.empty) {
+      // Eliminar favorito
+      await deleteDoc(favSnap.docs[0].ref);
+      setIsFavorite(false);
+    } else {
+      // Agregar favorito
+      await addDoc(collection(db, 'favorites'), {
+        userId: user.uid,
+        recipeId: recipe.id,
+        addedAt: new Date()
+      });
+      setIsFavorite(true);
+    }
+    setLoadingFav(false);
+  };
+
   return (
     <>
       <Link
@@ -17,7 +69,22 @@ function RecipeCard({ recipe }) {
           className="w-full h-40 object-cover object-center bg-gray-100 group-hover:scale-105 transition-transform"
         />
         <div className="p-4 flex-1 flex flex-col">
-          <h3 className="text-lg font-bold text-pantoneblack mb-1 line-clamp-1">{recipe.name}</h3>
+          <div className="flex items-center justify-between mb-1">
+            <h3 className="text-lg font-bold text-pantoneblack line-clamp-1">{recipe.name}</h3>
+            {user && (
+              <button
+                type="button"
+                onClick={handleToggleFavorite}
+                className="ml-2"
+                aria-label={isFavorite ? 'Quitar de favoritos' : 'Agregar a favoritos'}
+                disabled={loadingFav}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" fill={isFavorite ? '#F43F5E' : 'none'} viewBox="0 0 24 24" strokeWidth={1.5} stroke="#F43F5E" className="w-7 h-7 drop-shadow">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M21.752 7.592c0-2.386-1.93-4.316-4.316-4.316-1.31 0-2.617.617-3.436 1.617-.82-1-2.127-1.617-3.436-1.617-2.386 0-4.316 1.93-4.316 4.316 0 4.09 7.752 9.408 7.752 9.408s7.752-5.318 7.752-9.408z" />
+                </svg>
+              </button>
+            )}
+          </div>
           <p className="text-xs text-pantonebrown mb-2 line-clamp-2">{recipe.description}</p>
           <div className="flex flex-wrap items-center gap-2 mb-4">
             {recipe.category && (
