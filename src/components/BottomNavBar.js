@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { AuthContext } from '../AuthContext';
 
 const navItems = [
   {
@@ -21,6 +22,21 @@ const navItems = [
 
 function BottomNavBar() {
   const location = useLocation();
+  const { user } = React.useContext(AuthContext);
+
+  if (!user) {
+    return (
+      <nav className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-200 shadow flex justify-around items-center h-16 lg:hidden">
+        <Link
+          to="/login"
+          className="w-11/12 mx-auto bg-pantonegreen text-white font-bold rounded-full py-3 text-center text-base transition hover:bg-pantoneorange"
+        >
+          Iniciar sesión
+        </Link>
+      </nav>
+    );
+  }
+
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-200 shadow flex justify-around items-center h-16 lg:hidden">
       {navItems.map((item) => {

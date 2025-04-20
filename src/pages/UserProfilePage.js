@@ -81,7 +81,7 @@ function UserProfilePage() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto mt-12 bg-white p-10 rounded-xl shadow flex flex-col sm:flex-row items-center sm:items-start gap-10">
+    <div className="max-w-2xl mx-auto bg-white p-10 rounded-xl flex flex-col sm:flex-row items-center sm:items-start gap-10">
       {/* Foto de perfil a la izquierda en desktop, arriba en mobile */}
       <div className="flex-shrink-0 flex flex-col items-center w-full sm:w-auto">
         <img
