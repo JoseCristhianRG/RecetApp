@@ -158,26 +158,51 @@ function RecipeForm({
         return (
           <>
             <h2 className="text-xl font-bold mb-2">Nombre e imagen</h2>
+            {/* Imagen previsualización en recuadro arriba, ahora clickeable y rectangular */}
+            <div className="flex flex-col items-center mb-4">
+              <label htmlFor="main-image-upload" className="w-64 h-40 border-2 border-gray-200 rounded flex items-center justify-center bg-gray-50 overflow-hidden cursor-pointer hover:border-pantonegreen transition-all">
+                {form.image ? (
+                  <img
+                    src={URL.createObjectURL(form.image)}
+                    alt="Previsualización"
+                    className="object-cover w-full h-full"
+                  />
+                ) : form.imageUrl ? (
+                  <img
+                    src={form.imageUrl}
+                    alt="Receta"
+                    className="object-cover w-full h-full"
+                  />
+                ) : (
+                  <img
+                    src={require('../images/no_image.png')}
+                    alt="Sin imagen"
+                    className="object-cover w-full h-full"
+                  />
+                )}
+              </label>
+              <input
+                id="main-image-upload"
+                type="file"
+                onChange={e => handleChange('image', e.target.files[0])}
+                className="hidden"
+              />
+            </div>
             <div>
               <input
                 type="text"
                 placeholder="Nombre de la receta"
                 value={form.name}
                 onChange={e => handleChange('name', e.target.value)}
+                onKeyDown={e => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    if (form.name.trim()) setStep(step + 1);
+                  }
+                }}
                 className={`w-full p-2 border rounded ${errors.name ? 'border-red-500' : ''}`}
               />
               {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
-            </div>
-            <div>
-              <label className="block font-medium mb-1">Imagen principal</label>
-              <input
-                type="file"
-                onChange={e => handleChange('image', e.target.files[0])}
-                className="w-full p-2 border rounded"
-              />
-              {form.imageUrl && !form.image && (
-                <img src={form.imageUrl} alt="Receta" className="w-20 h-20 object-cover rounded mt-2" />
-              )}
             </div>
           </>
         );
@@ -331,7 +356,7 @@ function RecipeForm({
   };
 
   return (
-    <div className="p-7">
+    <div className="p-3">
       <div className="max-w-4xl mx-auto bg-white rounded">
         {renderStepper()}
         <form onSubmit={handleSubmit} className="space-y-4">
