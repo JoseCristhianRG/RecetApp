@@ -20,8 +20,8 @@ function CategoryPage() {
   }
   // Obtiene el nombre de la categoría
   const categoryName = categoryObj.name;
-  // Filtra las recetas por el nombre de la categoría
-  const filtered = recipes.filter((r) => r.category === categoryName);
+  // Filtra las recetas por el nombre de la categoría, solo públicas y publicadas
+  const filtered = recipes.filter((r) => r.category === categoryName && r.isPublic && r.status === 'published');
 
   if (filtered.length === 0) {
     // Si no hay recetas para la categoría, muestra mensaje

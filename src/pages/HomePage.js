@@ -1,6 +1,6 @@
 // Importaciones principales de React, hooks, contextos y dependencias de Firebase
 import React, { useContext, useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { CategoriesContext } from '../CategoriesContext';
 import { collection, query, orderBy, limit, getDocs } from 'firebase/firestore';
 import { db } from '../firebase';
@@ -13,6 +13,8 @@ function HomePage() {
   const { categories } = useContext(CategoriesContext);
   // Estado para las últimas recetas
   const [latestRecipes, setLatestRecipes] = useState([]);
+
+  const navigate = useNavigate();
 
   // Efecto para obtener las últimas recetas públicas y publicadas
   useEffect(() => {
