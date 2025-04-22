@@ -72,6 +72,12 @@ function RecipeForm({
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    // Borra el localStorage al guardar la receta
+    try {
+      localStorage.removeItem('recetapp_add_recipe_draft');
+    } catch (err) {
+      // Ignorar errores de localStorage
+    }
     onSubmit(form);
   };
 
@@ -317,23 +323,6 @@ function RecipeForm({
                 ))}
               </div>
             </div>
-            <div className="flex justify-between mt-6">
-              <button
-                type="button"
-                onClick={() => setStep(step - 1)}
-                className="px-4 py-2 bg-pantonebrown text-white rounded hover:bg-pantoneblack transition font-bold"
-              >
-                Anterior
-              </button>
-              <div className="flex-1"></div>
-              <button
-                type="submit"
-                className="px-4 py-2 bg-blue-600 text-white rounded shadow hover:bg-blue-700 transition font-bold ml-auto"
-                disabled={loading}
-              >
-                {submitText}
-              </button>
-            </div>
           </>
         );
       default:
@@ -363,7 +352,17 @@ function RecipeForm({
               >
                 Siguiente
               </button>
-            )}
+            )}{
+              step === 4 && (
+                <button
+                  type="submit"
+                  className={`px-4 py-2 bg-pantonegreen text-white rounded hover:bg-pantoneyellow hover:text-pantoneblack transition font-bold ml-auto ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  disabled={loading}
+                >
+                  {loading ? 'Guardando...' : submitText}
+                </button>
+              )
+            }
           </div>
         </form>
       </div>
