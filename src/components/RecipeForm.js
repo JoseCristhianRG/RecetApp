@@ -121,7 +121,7 @@ function RecipeForm({
 
   // Stepper visual mejorado
   const renderStepper = () => (
-    <div className="flex items-center justify-between mb-8 relative">
+    <div className="flex items-center justify-between mb-8 pt-2 relative">
       {/* Línea de fondo completa */}
       <div className="absolute left-0 right-0 h-1 bg-gray-200 z-0" style={{ top: '115%' }}></div>
       {/* Línea de progreso */}
@@ -210,19 +210,21 @@ function RecipeForm({
         return (
           <>
             <h2 className="text-xl font-bold mb-2">Categoría</h2>
-            <div>
-              <select
-                value={form.category}
-                onChange={e => handleChange('category', e.target.value)}
-                className={`w-full p-2 border rounded ${errors.category ? 'border-red-500' : ''}`}
-              >
-                <option value="">Selecciona una categoría</option>
-                {categories.map((cat) => (
-                  <option key={cat.id} value={cat.name}>{cat.name}</option>
-                ))}
-              </select>
-              {errors.category && <p className="text-red-500 text-xs mt-1">{errors.category}</p>}
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+              {categories.map((cat) => (
+                <button
+                  key={cat.id}
+                  type="button"
+                  onClick={() => handleChange('category', cat.name)}
+                  className={`p-4 rounded-lg border-2 transition-all flex items-center justify-center text-center font-medium
+                    ${form.category === cat.name ? 'border-pantonegreen bg-pantoneyellow text-pantoneblack' : 'border-gray-200 bg-white text-gray-700'}
+                    hover:border-pantonegreen hover:bg-pantonegreen/10 focus:outline-none`}
+                >
+                  {cat.name}
+                </button>
+              ))}
             </div>
+            {errors.category && <p className="text-red-500 text-xs mt-2">{errors.category}</p>}
           </>
         );
       case 2:
