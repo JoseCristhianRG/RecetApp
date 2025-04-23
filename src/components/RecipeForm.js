@@ -239,6 +239,23 @@ function RecipeForm({
                     type="text"
                     value={ing}
                     onChange={e => handleIngredientChange(idx, e.target.value)}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        if (idx < form.ingredients.length - 1) {
+                          // Enfoca el siguiente input
+                          const nextInput = document.getElementById(`ingredient-input-${idx + 1}`);
+                          if (nextInput) nextInput.focus();
+                        } else {
+                          // Agrega un nuevo ingrediente y enfoca
+                          handleAddIngredient();
+                          setTimeout(() => {
+                            const newInput = document.getElementById(`ingredient-input-${form.ingredients.length}`);
+                            if (newInput) newInput.focus();
+                          }, 50);
+                        }
+                      }
+                    }}
                     className={`flex-1 p-2 border rounded ${errors.ingredients ? 'border-red-500' : ''}`}
                     id={`ingredient-input-${idx}`}
                   />

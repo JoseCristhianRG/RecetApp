@@ -4,7 +4,9 @@ import {
   onAuthStateChanged,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
-  signOut
+  signOut,
+  GoogleAuthProvider,
+  signInWithPopup
 } from 'firebase/auth';
 import { Navigate } from 'react-router-dom';
 import { db } from './firebase';
@@ -17,6 +19,7 @@ export const AuthContext = createContext({
   signup: async () => {},
   signin: async () => {},
   signout: async () => {},
+  signinWithGoogle: async () => {},
 });
 
 export function AuthProvider({ children }) {
@@ -51,10 +54,17 @@ export function AuthProvider({ children }) {
     signInWithEmailAndPassword(auth, email, password);
   const signout = () => signOut(auth);
 
+  const signinWithGoogle = async () => {
+    const provider = new GoogleAuthProvider();
+    const result = await signInWithPopup(auth, provider);
+    // Si es nuevo usuario, podrías guardar en Firestore aquí
+    return result;
+  };
+
   if (loading) return <div>Cargando sesión...</div>;
 
   return (
-    <AuthContext.Provider value={{ user, userRole, signup, signin, signout }}>
+    <AuthContext.Provider value={{ user, userRole, signup, signin, signout, signinWithGoogle }}>
       {children}
     </AuthContext.Provider>
   );
