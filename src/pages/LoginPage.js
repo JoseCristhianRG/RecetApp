@@ -9,7 +9,7 @@ function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   // Obtiene la función de inicio de sesión y navegación
-  const { signin } = useContext(AuthContext);
+  const { signin, signinWithGoogle } = useContext(AuthContext);
   const navigate = useNavigate();
 
   // Maneja el envío del formulario de inicio de sesión
@@ -28,6 +28,29 @@ function LoginPage() {
     <div className="p-6 py-3">
       <div className="max-w-md md:max-w-2xl xl:max-w-4xl mx-auto">
         <h1 className="text-2xl font-bold mb-4">Iniciar sesión</h1>
+        <div className="mt-4 flex flex-col items-center">
+          <button
+            type="button"
+            onClick={async () => {
+              try {
+                const result = await signinWithGoogle();
+                // Si es nuevo usuario, podrías guardar en Firestore aquí
+                navigate('/');
+              } catch (err) {
+                alert(err.message);
+              }
+            }}
+            className="w-full max-w-xs px-4 py-2 bg-white border-2 border-pantoneorange text-pantoneorange rounded font-bold flex items-center justify-center gap-2 mb-4 hover:bg-pantoneyellow/30 transition"
+          >
+            <img src={require('../images/google_logo.png')} alt="Google" className="w-5 h-5 mr-2" />
+            Iniciar sesión con Google
+          </button>
+          <div className="w-full max-w-xs flex items-center mb-4">
+            <div className="flex-1 h-px bg-gray-300"></div>
+            <span className="mx-2 text-gray-400 text-sm">o</span>
+            <div className="flex-1 h-px bg-gray-300"></div>
+          </div>
+        </div>
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Campo para el correo electrónico */}
           <div>
