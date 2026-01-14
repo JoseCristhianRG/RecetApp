@@ -15,9 +15,9 @@ function LoadingSpinner({
   const spinner = (
     <div className="flex flex-col items-center justify-center gap-3">
       <div
-        className={`${sizes[size]} border-pantonegreen/30 border-t-pantonegreen rounded-full animate-spin`}
+        className={`${sizes[size]} border-forest/30 border-t-forest rounded-full animate-spin`}
       />
-      {text && <span className="text-pantoneblack font-medium">{text}</span>}
+      {text && <span className="text-cocoa font-medium">{text}</span>}
     </div>
   );
 

@@ -87,7 +87,7 @@ function UserProfilePage() {
         <img
           src={photoURL || require('../images/icono.png')}
           alt="Foto de perfil"
-          className="w-40 h-40 rounded-full object-cover border-2 border-pantonegreen mb-4 cursor-pointer hover:opacity-80 transition"
+          className="w-40 h-40 rounded-full object-cover border-2 border-forest mb-4 cursor-pointer hover:opacity-80 transition"
           onClick={handlePhotoClick}
           title="Cambiar foto"
         />
@@ -112,7 +112,7 @@ function UserProfilePage() {
           </div>
           {error && <div className="text-red-600 text-sm">{error}</div>}
           {success && <div className="text-green-600 text-sm">¡Perfil actualizado!</div>}
-          <button type="submit" disabled={saving} className="w-full bg-pantonegreen text-white py-2 rounded-lg font-bold hover:bg-primary-dark transition disabled:opacity-50">
+          <button type="submit" disabled={saving} className="w-full bg-forest text-white py-2 rounded-lg font-bold hover:bg-forest-dark transition disabled:opacity-50">
             {saving ? 'Guardando...' : 'Guardar cambios'}
           </button>
         </form>
