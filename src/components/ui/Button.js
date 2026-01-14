@@ -1,11 +1,11 @@
 import React from 'react';
 
 const variants = {
-  primary: 'bg-pantonegreen text-white hover:bg-primary-dark focus:ring-pantonegreen',
-  secondary: 'bg-pantoneyellow text-pantoneblack hover:bg-pantonebrown hover:text-white focus:ring-pantoneyellow',
+  primary: 'bg-forest text-white hover:bg-forest-dark focus:ring-forest',
+  secondary: 'bg-honey text-cocoa hover:bg-cocoa hover:text-white focus:ring-honey',
   danger: 'bg-red-500 text-white hover:bg-red-600 focus:ring-red-500',
-  ghost: 'bg-transparent text-pantonegreen hover:bg-pantonegreen/10 focus:ring-pantonegreen',
-  outline: 'border-2 border-pantonegreen text-pantonegreen hover:bg-pantonegreen hover:text-white focus:ring-pantonegreen',
+  ghost: 'bg-transparent text-forest hover:bg-forest/10 focus:ring-forest',
+  outline: 'border-2 border-forest text-forest hover:bg-forest hover:text-white focus:ring-forest',
 };
 
 const sizes = {

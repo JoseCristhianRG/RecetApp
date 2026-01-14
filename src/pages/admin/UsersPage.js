@@ -44,7 +44,7 @@ function UsersPage() {
                 {u.role !== 'admin' && (
                   <button
                     onClick={() => handleRoleChange(u.id, 'admin')}
-                    className="px-2 py-1 bg-pantonegreen text-white rounded mr-2"
+                    className="px-2 py-1 bg-forest text-white rounded mr-2"
                   >
                     Hacer admin
                   </button>
@@ -52,7 +52,7 @@ function UsersPage() {
                 {u.role !== 'user' && (
                   <button
                     onClick={() => handleRoleChange(u.id, 'user')}
-                    className="px-2 py-1 bg-pantoneyellow text-pantoneblack rounded"
+                    className="px-2 py-1 bg-honey text-cocoa rounded"
                   >
                     Hacer usuario
                   </button>
