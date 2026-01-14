@@ -12,12 +12,37 @@ function RecipeForm({
   isEdit = false,
   onFormChange,
 }) {
-  const [form, setForm] = useState({ ...initialValues });
+  // Ensure all required fields have default values
+  const safeInitialValues = {
+    name: '',
+    category: '',
+    ingredients: [''],
+    steps: [{ title: '', description: '', image: null, imageUrl: '' }],
+    image: null,
+    imageUrl: '',
+    isPublic: true,
+    status: 'draft',
+    tags: [],
+    ...initialValues,
+  };
+
+  const [form, setForm] = useState(safeInitialValues);
   const [tagInput, setTagInput] = useState('');
   const [step, setStep] = useState(0);
 
   useEffect(() => {
-    setForm({ ...initialValues });
+    setForm({
+      name: '',
+      category: '',
+      ingredients: [''],
+      steps: [{ title: '', description: '', image: null, imageUrl: '' }],
+      image: null,
+      imageUrl: '',
+      isPublic: true,
+      status: 'draft',
+      tags: [],
+      ...initialValues,
+    });
   }, [initialValues]);
 
   useEffect(() => {
@@ -59,14 +84,16 @@ function RecipeForm({
 
   const handleAddTag = () => {
     const newTag = tagInput.trim();
-    if (newTag && !form.tags.includes(newTag)) {
-      handleChange('tags', [...form.tags, newTag]);
+    const currentTags = form.tags || [];
+    if (newTag && !currentTags.includes(newTag)) {
+      handleChange('tags', [...currentTags, newTag]);
       setTagInput('');
     }
   };
 
   const handleRemoveTag = (tag) => {
-    handleChange('tags', form.tags.filter((t) => t !== tag));
+    const currentTags = form.tags || [];
+    handleChange('tags', currentTags.filter((t) => t !== tag));
   };
 
   const handleSubmit = (e) => {
@@ -438,22 +465,47 @@ function RecipeForm({
               <p className="font-body text-cocoa-light text-sm mt-1">Configura la visibilidad y añade etiquetas</p>
             </div>
 
+            {/* Recipe Summary */}
+            <div className="bg-gradient-to-br from-forest/5 to-mint/10 rounded-2xl p-4 border border-forest/10">
+              <h3 className="font-display font-semibold text-forest mb-3 flex items-center gap-2">
+                <span className="text-lg">📋</span> Resumen de tu receta
+              </h3>
+              <div className="space-y-2 text-sm">
+                <div className="flex items-center gap-2">
+                  <span className="text-cocoa-light">Nombre:</span>
+                  <span className="font-medium text-cocoa">{form.name || 'Sin nombre'}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-cocoa-light">Categoría:</span>
+                  <span className="font-medium text-cocoa">{form.category || 'Sin categoría'}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-cocoa-light">Ingredientes:</span>
+                  <span className="font-medium text-cocoa">{form.ingredients?.filter(i => i.trim()).length || 0}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-cocoa-light">Pasos:</span>
+                  <span className="font-medium text-cocoa">{form.steps?.length || 0}</span>
+                </div>
+              </div>
+            </div>
+
             {/* Visibility Toggle */}
             <div className="bg-cream-100 rounded-2xl p-4">
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="font-display font-semibold text-cocoa">Visibilidad</h3>
                   <p className="text-sm text-cocoa-light">
-                    {form.isPublic ? 'Todos pueden ver tu receta' : 'Solo tú puedes ver esta receta'}
+                    {form.isPublic !== false ? 'Todos pueden ver tu receta' : 'Solo tú puedes ver esta receta'}
                   </p>
                 </div>
                 <Switch
-                  checked={form.isPublic}
+                  checked={form.isPublic !== false}
                   onChange={v => handleChange('isPublic', v)}
-                  className={`${form.isPublic ? 'bg-forest' : 'bg-cocoa-lighter'}
+                  className={`${form.isPublic !== false ? 'bg-forest' : 'bg-cocoa-lighter'}
                     relative inline-flex h-7 w-12 items-center rounded-full transition-colors focus:outline-none`}
                 >
-                  <span className={`${form.isPublic ? 'translate-x-6' : 'translate-x-1'}
+                  <span className={`${form.isPublic !== false ? 'translate-x-6' : 'translate-x-1'}
                     inline-block h-5 w-5 transform rounded-full bg-white shadow-soft transition-transform`}
                   />
                 </Switch>
@@ -507,7 +559,7 @@ function RecipeForm({
                   Agregar
                 </button>
               </div>
-              {form.tags.length > 0 && (
+              {(form.tags?.length > 0) && (
                 <div className="flex flex-wrap gap-2">
                   {form.tags.map(tag => (
                     <span key={tag} className="badge-honey flex items-center gap-2">
