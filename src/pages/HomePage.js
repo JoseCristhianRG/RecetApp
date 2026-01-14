@@ -2,7 +2,7 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { CategoriesContext } from '../CategoriesContext';
-import { collection, query, orderBy, limit, getDocs } from 'firebase/firestore';
+import { collection, query, orderBy, getDocs, where } from 'firebase/firestore';
 import { db } from '../firebase';
 import RecipeCard from '../components/RecipeCard';
 import CategoryCard from '../components/CategoryCard';
@@ -19,13 +19,17 @@ function HomePage() {
   // Efecto para obtener las últimas recetas públicas y publicadas
   useEffect(() => {
     const fetchLatestRecipes = async () => {
-      const q = query(collection(db, 'recipes'), orderBy('createdAt', 'desc'));
+      const q = query(
+        collection(db, 'recipes'),
+        where('isPublic', '==', true),
+        where('status', '==', 'published'),
+        orderBy('createdAt', 'desc')
+      );
       const querySnapshot = await getDocs(q);
-      // Filtrar solo recetas públicas y publicadas, y limitar a 5
+      // Limitar a 6 recetas
       const recipesData = querySnapshot.docs
         .map((doc) => ({ id: doc.id, ...doc.data() }))
-        .filter(r => r.isPublic && r.status === 'published')
-        .slice(0, 5);
+        .slice(0, 6);
       setLatestRecipes(recipesData);
     };
 

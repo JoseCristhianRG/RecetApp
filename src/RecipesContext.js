@@ -1,6 +1,6 @@
 import React, { createContext, useState, useEffect } from 'react';
 import { db } from './firebase';
-import { collection, query, orderBy, onSnapshot, addDoc } from 'firebase/firestore';
+import { collection, query, orderBy, onSnapshot, addDoc, where } from 'firebase/firestore';
 
 export const RecipesContext = createContext({
   recipes: [],
@@ -10,7 +10,11 @@ export const RecipesContext = createContext({
 export function RecipesProvider({ children }) {
   const [recipes, setRecipes] = useState([]);
   useEffect(() => {
-    const q = query(collection(db, 'recipes'), orderBy('name'));
+    const q = query(
+      collection(db, 'recipes'),
+      where('isPublic', '==', true),
+      orderBy('name')
+    );
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const recs = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
       setRecipes(recs);
