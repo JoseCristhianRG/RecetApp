@@ -10,17 +10,16 @@ function RecipeForm({
   title = 'Receta',
   submitText = 'Guardar',
   isEdit = false,
-  onFormChange, // Nuevo prop para detectar cambios
+  onFormChange,
 }) {
   const [form, setForm] = useState({ ...initialValues });
   const [tagInput, setTagInput] = useState('');
-  const [step, setStep] = useState(0); // Paso actual del wizard
+  const [step, setStep] = useState(0);
 
   useEffect(() => {
     setForm({ ...initialValues });
   }, [initialValues]);
 
-  // Notificar cambios al padre (AddRecipePage)
   useEffect(() => {
     if (onFormChange) onFormChange(form);
     // eslint-disable-next-line
@@ -72,42 +71,28 @@ function RecipeForm({
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Borra el localStorage al guardar la receta
     try {
       localStorage.removeItem('recetapp_add_recipe_draft');
-    } catch (err) {
-      // Ignorar errores de localStorage
-    }
+    } catch (err) {}
     onSubmit(form);
   };
 
-  // Validación por paso (puedes mejorarla según tus reglas)
   const validateStep = () => {
-    if (step === 0) {
-      return form.name.trim();
-    }
-    if (step === 1) {
-      return form.category;
-    }
-    if (step === 2) {
-      return form.ingredients.length > 0 && form.ingredients.every(i => i.trim());
-    }
-    if (step === 3) {
-      return form.steps.length > 0 && form.steps.every(s => s.title.trim() && s.description.trim());
-    }
-    // No validación estricta para los últimos pasos
+    if (step === 0) return form.name.trim();
+    if (step === 1) return form.category;
+    if (step === 2) return form.ingredients.length > 0 && form.ingredients.every(i => i.trim());
+    if (step === 3) return form.steps.length > 0 && form.steps.every(s => s.title.trim() && s.description.trim());
     return true;
   };
 
-  const steps = [
-    'Básico',
-    'Categoría',
-    'Ingredientes',
-    'Pasos',
-    'Visibilidad'
+  const stepLabels = [
+    { label: 'Básico', icon: '📝' },
+    { label: 'Categoría', icon: '📂' },
+    { label: 'Ingredientes', icon: '🥗' },
+    { label: 'Pasos', icon: '👨‍🍳' },
+    { label: 'Publicar', icon: '🚀' }
   ];
 
-  // Permitir ir a un step si ya está completado o es anterior al actual
   const canGoToStep = (targetStep) => {
     if (targetStep <= step) return true;
     for (let i = 0; i < targetStep; i++) {
@@ -119,79 +104,116 @@ function RecipeForm({
     return true;
   };
 
-  // Stepper visual mejorado
   const renderStepper = () => (
-    <div className="flex items-center justify-between mb-8 pt-2 relative">
-      {/* Línea de fondo completa */}
-      <div className="absolute left-0 right-0 h-1 bg-gray-200 z-0" style={{ top: '115%' }}></div>
-      {/* Línea de progreso */}
-      <div
-        className="absolute left-0 h-1 bg-honey z-10 transition-all"
-        style={{
-          width: `${(step / (steps.length - 1)) * 100}%`,
-          top: '115%',
-        }}
-      ></div>
-      {steps.map((label, idx) => (
-        <div key={label} className="flex-1 flex flex-col items-center relative z-20">
+    <div className="mb-8">
+      {/* Progress bar */}
+      <div className="relative h-2 bg-cream-200 rounded-full overflow-hidden mb-6">
+        <div
+          className="absolute left-0 top-0 h-full bg-gradient-forest rounded-full transition-all duration-500 ease-out"
+          style={{ width: `${(step / (stepLabels.length - 1)) * 100}%` }}
+        />
+      </div>
+
+      {/* Step indicators */}
+      <div className="flex justify-between">
+        {stepLabels.map((item, idx) => (
           <button
+            key={item.label}
             type="button"
             disabled={!canGoToStep(idx)}
             onClick={() => canGoToStep(idx) && setStep(idx)}
-            className={`w-8 h-8 flex items-center justify-center rounded-full font-bold border-2 transition-all focus:outline-none
-              ${step === idx ? 'bg-forest text-white border-forest' : step > idx ? 'bg-honey text-cocoa border-honey' : 'bg-gray-200 text-gray-400 border-gray-300'}
-              ${canGoToStep(idx) ? 'cursor-pointer' : 'cursor-not-allowed'}`}
-            title={label}
+            className={`flex flex-col items-center transition-all duration-300 group
+              ${canGoToStep(idx) ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'}`}
           >
-            {idx + 1}
+            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-xl mb-2
+              transition-all duration-300 shadow-soft
+              ${step === idx
+                ? 'bg-gradient-forest text-white scale-110 shadow-glow-forest'
+                : step > idx
+                  ? 'bg-mint text-forest'
+                  : 'bg-cream-200 text-cocoa-light'
+              }
+              ${canGoToStep(idx) && step !== idx ? 'group-hover:scale-105' : ''}`}
+            >
+              {step > idx ? '✓' : item.icon}
+            </div>
+            <span className={`text-xs font-display font-medium hidden sm:block
+              ${step === idx ? 'text-forest' : 'text-cocoa-light'}`}>
+              {item.label}
+            </span>
           </button>
-          <span className={`text-xs mt-1 text-center ${step === idx ? 'text-forest font-bold' : 'text-gray-500'}`}>{label}</span>
-        </div>
-      ))}
+        ))}
+      </div>
     </div>
   );
 
-  // Renderizado de cada paso
   const renderStep = () => {
     switch (step) {
       case 0:
         return (
-          <>
-            <h2 className="text-xl font-bold mb-2">Nombre e imagen</h2>
-            {/* Imagen previsualización en recuadro arriba, ahora clickeable y rectangular */}
-            <div className="flex flex-col items-center mb-4">
-              <label htmlFor="main-image-upload" className="w-64 h-40 border-2 border-gray-200 rounded flex items-center justify-center bg-gray-50 overflow-hidden cursor-pointer hover:border-forest transition-all">
+          <div className="space-y-6 animate-fade-in-up">
+            <div className="text-center mb-6">
+              <h2 className="font-display text-2xl font-bold text-cocoa">Nombre e imagen</h2>
+              <p className="font-body text-cocoa-light text-sm mt-1">Dale un nombre a tu receta y sube una foto</p>
+            </div>
+
+            {/* Image upload */}
+            <div className="flex flex-col items-center">
+              <label
+                htmlFor="main-image-upload"
+                className="relative w-full max-w-sm aspect-video rounded-2xl overflow-hidden cursor-pointer
+                  border-2 border-dashed border-cocoa/20 hover:border-forest transition-all duration-300
+                  group bg-cream-100"
+              >
                 {form.image ? (
                   <img
                     src={URL.createObjectURL(form.image)}
                     alt="Previsualización"
-                    className="object-cover w-full h-full"
+                    className="w-full h-full object-cover"
                   />
                 ) : form.imageUrl ? (
                   <img
                     src={form.imageUrl}
                     alt="Receta"
-                    className="object-cover w-full h-full"
+                    className="w-full h-full object-cover"
                   />
                 ) : (
-                  <img
-                    src={require('../images/no_image.png')}
-                    alt="Sin imagen"
-                    className="object-cover w-full h-full"
-                  />
+                  <div className="absolute inset-0 flex flex-col items-center justify-center">
+                    <div className="w-16 h-16 rounded-full bg-forest/10 flex items-center justify-center mb-3
+                      group-hover:bg-forest/20 transition-colors">
+                      <svg className="w-8 h-8 text-forest" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+                          d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                    </div>
+                    <span className="font-display font-medium text-cocoa-light">Subir imagen</span>
+                    <span className="text-xs text-cocoa-lighter mt-1">Click para seleccionar</span>
+                  </div>
+                )}
+                {(form.image || form.imageUrl) && (
+                  <div className="absolute inset-0 bg-cocoa/50 opacity-0 group-hover:opacity-100
+                    flex items-center justify-center transition-opacity">
+                    <span className="text-white font-display font-medium">Cambiar imagen</span>
+                  </div>
                 )}
               </label>
               <input
                 id="main-image-upload"
                 type="file"
+                accept="image/*"
                 onChange={e => handleChange('image', e.target.files[0])}
                 className="hidden"
               />
             </div>
+
+            {/* Name input */}
             <div>
+              <label className="block font-display font-medium text-cocoa text-sm mb-2">
+                Nombre de la receta
+              </label>
               <input
                 type="text"
-                placeholder="Nombre de la receta"
+                placeholder="Ej: Pasta a la carbonara"
                 value={form.name}
                 onChange={e => handleChange('name', e.target.value)}
                 onKeyDown={e => {
@@ -200,41 +222,66 @@ function RecipeForm({
                     if (form.name.trim()) setStep(step + 1);
                   }
                 }}
-                className={`w-full p-2 border rounded ${errors.name ? 'border-red-500' : ''}`}
+                className={`input ${errors.name ? 'input-error' : ''}`}
               />
-              {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
+              {errors.name && <p className="text-tangerine text-xs mt-2">{errors.name}</p>}
             </div>
-          </>
+          </div>
         );
+
       case 1:
         return (
-          <>
-            <h2 className="text-xl font-bold mb-2">Categoría</h2>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+          <div className="space-y-6 animate-fade-in-up">
+            <div className="text-center mb-6">
+              <h2 className="font-display text-2xl font-bold text-cocoa">Categoría</h2>
+              <p className="font-body text-cocoa-light text-sm mt-1">¿En qué categoría encaja tu receta?</p>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               {categories.map((cat) => (
                 <button
                   key={cat.id}
                   type="button"
                   onClick={() => handleChange('category', cat.name)}
-                  className={`p-4 rounded-lg border-2 transition-all flex items-center justify-center text-center font-medium
-                    ${form.category === cat.name ? 'border-forest bg-honey text-cocoa' : 'border-gray-200 bg-white text-gray-700'}
-                    hover:border-forest hover:bg-forest/10 focus:outline-none`}
+                  className={`p-4 rounded-2xl border-2 transition-all duration-300
+                    flex flex-col items-center justify-center text-center min-h-[100px]
+                    ${form.category === cat.name
+                      ? 'border-forest bg-forest/10 shadow-soft'
+                      : 'border-cream-200 bg-white hover:border-forest/50 hover:bg-cream-100'
+                    }`}
                 >
-                  {cat.name}
+                  {cat.image && (
+                    <img src={cat.image} alt={cat.name} className="w-10 h-10 rounded-full object-cover mb-2" />
+                  )}
+                  <span className={`font-display font-semibold text-sm
+                    ${form.category === cat.name ? 'text-forest' : 'text-cocoa'}`}>
+                    {cat.name}
+                  </span>
+                  {form.category === cat.name && (
+                    <span className="text-forest text-lg mt-1">✓</span>
+                  )}
                 </button>
               ))}
             </div>
-            {errors.category && <p className="text-red-500 text-xs mt-2">{errors.category}</p>}
-          </>
+            {errors.category && <p className="text-tangerine text-xs mt-2 text-center">{errors.category}</p>}
+          </div>
         );
+
       case 2:
         return (
-          <>
-            <h2 className="text-xl font-bold mb-2">Ingredientes</h2>
-            <div>
-              <label className="block font-medium mb-1">Ingredientes</label>
+          <div className="space-y-6 animate-fade-in-up">
+            <div className="text-center mb-6">
+              <h2 className="font-display text-2xl font-bold text-cocoa">Ingredientes</h2>
+              <p className="font-body text-cocoa-light text-sm mt-1">Lista todos los ingredientes necesarios</p>
+            </div>
+
+            <div className="space-y-3">
               {form.ingredients.map((ing, idx) => (
-                <div key={idx} className="flex gap-2 mb-1">
+                <div key={idx} className="flex gap-2 items-center animate-fade-in-up"
+                  style={{ animationDelay: `${idx * 0.05}s` }}>
+                  <div className="w-8 h-8 rounded-full bg-forest/10 flex items-center justify-center flex-shrink-0">
+                    <span className="text-forest font-display font-bold text-sm">{idx + 1}</span>
+                  </div>
                   <input
                     type="text"
                     value={ing}
@@ -243,11 +290,9 @@ function RecipeForm({
                       if (e.key === 'Enter') {
                         e.preventDefault();
                         if (idx < form.ingredients.length - 1) {
-                          // Enfoca el siguiente input
                           const nextInput = document.getElementById(`ingredient-input-${idx + 1}`);
                           if (nextInput) nextInput.focus();
                         } else {
-                          // Agrega un nuevo ingrediente y enfoca
                           handleAddIngredient();
                           setTimeout(() => {
                             const newInput = document.getElementById(`ingredient-input-${form.ingredients.length}`);
@@ -256,99 +301,197 @@ function RecipeForm({
                         }
                       }
                     }}
-                    className={`flex-1 p-2 border rounded ${errors.ingredients ? 'border-red-500' : ''}`}
+                    placeholder="Ej: 200g de harina"
+                    className={`input flex-1 ${errors.ingredients ? 'input-error' : ''}`}
                     id={`ingredient-input-${idx}`}
                   />
                   {form.ingredients.length > 1 && (
-                    <button type="button" onClick={() => handleRemoveIngredient(idx)} className="px-2 text-red-600">✕</button>
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveIngredient(idx)}
+                      className="p-2 rounded-full text-tangerine hover:bg-tangerine-50 transition-colors"
+                    >
+                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
                   )}
                 </div>
               ))}
-              <button type="button" onClick={handleAddIngredient} className="text-xs text-forest underline">Agregar ingrediente</button>
-              {errors.ingredients && <p className="text-red-500 text-xs mt-1">{errors.ingredients}</p>}
             </div>
-          </>
+
+            <button
+              type="button"
+              onClick={handleAddIngredient}
+              className="w-full py-3 border-2 border-dashed border-forest/30 rounded-2xl
+                text-forest font-display font-medium hover:bg-forest/5 transition-colors
+                flex items-center justify-center gap-2"
+            >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              Agregar ingrediente
+            </button>
+
+            {errors.ingredients && <p className="text-tangerine text-xs mt-2 text-center">{errors.ingredients}</p>}
+          </div>
         );
+
       case 3:
         return (
-          <>
-            <h2 className="text-xl font-bold mb-2">Pasos de preparación</h2>
-            <div>
-              <label className="block font-medium mb-1">Pasos</label>
+          <div className="space-y-6 animate-fade-in-up">
+            <div className="text-center mb-6">
+              <h2 className="font-display text-2xl font-bold text-cocoa">Pasos de preparación</h2>
+              <p className="font-body text-cocoa-light text-sm mt-1">Describe cada paso para preparar tu receta</p>
+            </div>
+
+            <div className="space-y-4">
               {form.steps.map((stepObj, idx) => (
-                <div key={idx} className="mb-3 p-2 border rounded bg-gray-50">
+                <div key={idx} className="bg-cream-100 rounded-2xl p-4 animate-fade-in-up"
+                  style={{ animationDelay: `${idx * 0.1}s` }}>
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-forest flex items-center justify-center">
+                      <span className="text-white font-display font-bold">{idx + 1}</span>
+                    </div>
+                    <span className="font-display font-semibold text-cocoa">Paso {idx + 1}</span>
+                    {form.steps.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveStep(idx)}
+                        className="ml-auto p-2 text-tangerine hover:bg-tangerine-50 rounded-full transition-colors"
+                      >
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
+                    )}
+                  </div>
+
                   <input
                     type="text"
-                    placeholder="Nombre del paso"
+                    placeholder="Título del paso (ej: Preparar la masa)"
                     value={stepObj.title}
                     onChange={e => handleStepChange(idx, 'title', e.target.value)}
-                    className={`w-full p-2 border rounded mb-1 ${errors.steps ? 'border-red-500' : ''}`}
+                    className={`input mb-3 ${errors.steps ? 'input-error' : ''}`}
                   />
+
                   <textarea
-                    placeholder="Descripción del paso"
+                    placeholder="Describe este paso en detalle..."
                     value={stepObj.description}
                     onChange={e => handleStepChange(idx, 'description', e.target.value)}
-                    className={`w-full p-2 border rounded mb-1 ${errors.stepsDesc ? 'border-red-500' : ''}`}
+                    rows={3}
+                    className={`input resize-none mb-3 ${errors.stepsDesc ? 'input-error' : ''}`}
                   />
-                  <input
-                    type="file"
-                    onChange={e => handleStepChange(idx, 'image', e.target.files[0])}
-                    className="w-full p-2 border rounded mb-1"
-                  />
-                  {stepObj.imageUrl && !stepObj.image && (
-                    <img src={stepObj.imageUrl} alt="Paso" className="w-16 h-16 object-cover rounded mb-1" />
-                  )}
-                  {form.steps.length > 1 && (
-                    <button type="button" onClick={() => handleRemoveStep(idx)} className="text-xs text-red-600">Eliminar paso</button>
-                  )}
+
+                  <div className="flex items-center gap-3">
+                    <label className="flex-1 py-2 px-4 border-2 border-dashed border-cocoa/20 rounded-xl
+                      text-cocoa-light text-sm font-medium cursor-pointer hover:border-forest/50 transition-colors
+                      flex items-center justify-center gap-2">
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                          d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      {stepObj.image ? 'Cambiar imagen' : 'Agregar imagen'}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={e => handleStepChange(idx, 'image', e.target.files[0])}
+                        className="hidden"
+                      />
+                    </label>
+                    {(stepObj.imageUrl || stepObj.image) && (
+                      <img
+                        src={stepObj.image ? URL.createObjectURL(stepObj.image) : stepObj.imageUrl}
+                        alt={`Paso ${idx + 1}`}
+                        className="w-16 h-16 object-cover rounded-xl"
+                      />
+                    )}
+                  </div>
                 </div>
               ))}
-              <button type="button" onClick={handleAddStep} className="text-xs text-forest underline">Agregar paso</button>
-              {(errors.steps || errors.stepsDesc) && <p className="text-red-500 text-xs mt-1">{errors.steps || errors.stepsDesc}</p>}
             </div>
-          </>
+
+            <button
+              type="button"
+              onClick={handleAddStep}
+              className="w-full py-3 border-2 border-dashed border-forest/30 rounded-2xl
+                text-forest font-display font-medium hover:bg-forest/5 transition-colors
+                flex items-center justify-center gap-2"
+            >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              Agregar paso
+            </button>
+
+            {(errors.steps || errors.stepsDesc) && (
+              <p className="text-tangerine text-xs mt-2 text-center">{errors.steps || errors.stepsDesc}</p>
+            )}
+          </div>
         );
+
       case 4:
         return (
-          <>
-            <h2 className="text-xl font-bold mb-2">Visibilidad y estado</h2>
-            <div>
-              <label className="block font-medium mb-1">Visibilidad</label>
-              <Switch
-                checked={form.isPublic}
-                onChange={v => handleChange('isPublic', v)}
-                className={`${form.isPublic ? 'bg-forest' : 'bg-cocoa'} relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none`}
-              >
-                <span className="sr-only">Pública</span>
-                <span
-                  className={`${form.isPublic ? 'translate-x-6' : 'translate-x-1'} inline-block h-4 w-4 transform rounded-full bg-white transition-transform`}
-                />
-              </Switch>
-              <span className="ml-3 text-sm font-medium">{form.isPublic ? 'Pública' : 'Privada'}</span>
+          <div className="space-y-6 animate-fade-in-up">
+            <div className="text-center mb-6">
+              <h2 className="font-display text-2xl font-bold text-cocoa">Configuración final</h2>
+              <p className="font-body text-cocoa-light text-sm mt-1">Configura la visibilidad y añade etiquetas</p>
             </div>
-            <div>
-              <label className="block font-medium mb-1">Estado</label>
-              <Switch
-                checked={form.status === 'published'}
-                onChange={v => handleChange('status', v ? 'published' : 'draft')}
-                className={`${form.status === 'published' ? 'bg-blue-600' : 'bg-honey'} relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none`}
-              >
-                <span className="sr-only">Publicada</span>
-                <span
-                  className={`${form.status === 'published' ? 'translate-x-6' : 'translate-x-1'} inline-block h-4 w-4 transform rounded-full bg-white transition-transform`}
-                />
-              </Switch>
-              <span className="ml-3 text-sm font-medium">{form.status === 'published' ? 'Publicada' : 'Borrador'}</span>
+
+            {/* Visibility Toggle */}
+            <div className="bg-cream-100 rounded-2xl p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="font-display font-semibold text-cocoa">Visibilidad</h3>
+                  <p className="text-sm text-cocoa-light">
+                    {form.isPublic ? 'Todos pueden ver tu receta' : 'Solo tú puedes ver esta receta'}
+                  </p>
+                </div>
+                <Switch
+                  checked={form.isPublic}
+                  onChange={v => handleChange('isPublic', v)}
+                  className={`${form.isPublic ? 'bg-forest' : 'bg-cocoa-lighter'}
+                    relative inline-flex h-7 w-12 items-center rounded-full transition-colors focus:outline-none`}
+                >
+                  <span className={`${form.isPublic ? 'translate-x-6' : 'translate-x-1'}
+                    inline-block h-5 w-5 transform rounded-full bg-white shadow-soft transition-transform`}
+                  />
+                </Switch>
+              </div>
             </div>
-            <div>
-              <label className="block font-medium mb-1">Etiquetas</label>
-              <div className="flex gap-2 mb-2">
+
+            {/* Status Toggle */}
+            <div className="bg-cream-100 rounded-2xl p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="font-display font-semibold text-cocoa">Estado</h3>
+                  <p className="text-sm text-cocoa-light">
+                    {form.status === 'published' ? 'Publicada y lista' : 'Guardada como borrador'}
+                  </p>
+                </div>
+                <Switch
+                  checked={form.status === 'published'}
+                  onChange={v => handleChange('status', v ? 'published' : 'draft')}
+                  className={`${form.status === 'published' ? 'bg-tangerine' : 'bg-honey'}
+                    relative inline-flex h-7 w-12 items-center rounded-full transition-colors focus:outline-none`}
+                >
+                  <span className={`${form.status === 'published' ? 'translate-x-6' : 'translate-x-1'}
+                    inline-block h-5 w-5 transform rounded-full bg-white shadow-soft transition-transform`}
+                  />
+                </Switch>
+              </div>
+            </div>
+
+            {/* Tags */}
+            <div className="bg-cream-100 rounded-2xl p-4">
+              <h3 className="font-display font-semibold text-cocoa mb-3">Etiquetas</h3>
+              <div className="flex gap-2 mb-3">
                 <input
                   type="text"
                   value={tagInput}
                   onChange={e => setTagInput(e.target.value)}
-                  className="flex-1 p-2 border rounded"
-                  placeholder="Añadir etiqueta"
+                  className="input flex-1"
+                  placeholder="Añadir etiqueta..."
                   onKeyDown={e => {
                     if (e.key === 'Enter') {
                       e.preventDefault();
@@ -356,57 +499,100 @@ function RecipeForm({
                     }
                   }}
                 />
-                <button type="button" onClick={handleAddTag} className="px-3 py-1 bg-forest text-white rounded">Agregar</button>
+                <button
+                  type="button"
+                  onClick={handleAddTag}
+                  className="btn-primary px-4"
+                >
+                  Agregar
+                </button>
               </div>
-              <div className="flex flex-wrap gap-2">
-                {form.tags.map(tag => (
-                  <span key={tag} className="bg-honey text-cocoa px-2 py-1 rounded text-xs flex items-center gap-1">
-                    {tag}
-                    <button type="button" onClick={() => handleRemoveTag(tag)} className="text-cocoa font-bold ml-1">×</button>
-                  </span>
-                ))}
-              </div>
+              {form.tags.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {form.tags.map(tag => (
+                    <span key={tag} className="badge-honey flex items-center gap-2">
+                      {tag}
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveTag(tag)}
+                        className="hover:text-tangerine transition-colors"
+                      >
+                        ×
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
-          </>
+          </div>
         );
+
       default:
         return null;
     }
   };
 
   return (
-    <div className="p-3">
-      <div className="max-w-4xl mx-auto bg-white rounded">
+    <div className="max-w-2xl mx-auto px-4 py-6 animate-fade-in">
+      <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-soft-lg p-6 border border-white/50">
         {renderStepper()}
-        <form onSubmit={handleSubmit} className="space-y-4">
+
+        <form onSubmit={handleSubmit}>
           {renderStep()}
-          <div className="flex justify-between mt-6">
-            {step > 0 && (
-              <button type="button" onClick={() => setStep(step - 1)} className="px-4 py-2 bg-cocoa text-white rounded hover:bg-cocoa transition font-bold">
+
+          {/* Navigation Buttons */}
+          <div className="flex justify-between mt-8 pt-6 border-t border-cream-200">
+            {step > 0 ? (
+              <button
+                type="button"
+                onClick={() => setStep(step - 1)}
+                className="btn-secondary"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
                 Anterior
               </button>
+            ) : (
+              <div />
             )}
-            <div className="flex-1"></div>
-            {step < 4 && (
+
+            {step < 4 ? (
               <button
                 type="button"
                 onClick={() => validateStep() && setStep(step + 1)}
-                className={`px-4 py-2 bg-forest text-white rounded hover:bg-honey hover:text-cocoa transition font-bold ml-auto ${!validateStep() ? 'opacity-50 cursor-not-allowed' : ''}`}
+                className={`btn-primary ${!validateStep() ? 'opacity-50 cursor-not-allowed' : ''}`}
                 disabled={!validateStep()}
               >
                 Siguiente
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
               </button>
-            )}{
-              step === 4 && (
-                <button
-                  type="submit"
-                  className={`px-4 py-2 bg-forest text-white rounded hover:bg-honey hover:text-cocoa transition font-bold ml-auto ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
-                  disabled={loading}
-                >
-                  {loading ? 'Guardando...' : submitText}
-                </button>
-              )
-            }
+            ) : (
+              <button
+                type="submit"
+                className={`btn-accent ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                disabled={loading}
+              >
+                {loading ? (
+                  <>
+                    <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                    Guardando...
+                  </>
+                ) : (
+                  <>
+                    {submitText}
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  </>
+                )}
+              </button>
+            )}
           </div>
         </form>
       </div>
