@@ -2,11 +2,13 @@
 import React, { useContext } from 'react';
 import { RecipesContext } from '../RecipesContext';
 import { AuthContext } from '../AuthContext';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import Modal from '../components/Modal';
 import { deleteDoc, doc } from 'firebase/firestore';
 import { db } from '../firebase';
 import RecipeCard from '../components/RecipeCard';
+import { EmptyState } from '../components/ui';
+import { BookIcon } from '../components/icons';
 
 // Componente para mostrar las recetas creadas por el usuario
 function MisRecetasPage() {
@@ -26,11 +28,18 @@ function MisRecetasPage() {
 
   return (
     // Layout principal de la página de mis recetas
-    <div className="p-6 py-3">
+    <div className="p-6 py-3 animate-fade-in">
       <h1 className="text-2xl font-bold mb-4">Mis Recetas</h1>
-      {/* Si no hay recetas, muestra un mensaje */}
+      {/* Si no hay recetas, muestra un estado vacío */}
       {myRecipes.length === 0 ? (
-        <p>No has creado ninguna receta aún.</p>
+        <EmptyState
+          icon={<BookIcon className="w-20 h-20" />}
+          title="Sin recetas"
+          description="Aun no has creado ninguna receta. Empieza a compartir tus creaciones culinarias."
+          action
+          actionText="Crear receta"
+          onAction={() => navigate('/add')}
+        />
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {myRecipes.map(recipe => (

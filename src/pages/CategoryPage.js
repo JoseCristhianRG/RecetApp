@@ -1,38 +1,56 @@
-// Importaciones principales de React, hooks, rutas y contextos
 import React, { useContext } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { RecipesContext } from '../RecipesContext';
 import { CategoriesContext } from '../CategoriesContext';
 import RecipeCard from '../components/RecipeCard';
+import { EmptyState } from '../components/ui';
+import { ChefHatIcon } from '../components/icons';
 
-// Componente para mostrar recetas por categoría
 function CategoryPage() {
-  // Obtiene el ID de la categoría desde la URL
   const { categoryId } = useParams();
-  // Obtiene las categorías y recetas desde el contexto
   const { categories } = useContext(CategoriesContext);
   const { recipes } = useContext(RecipesContext);
-  // Busca la categoría correspondiente por ID
+  const navigate = useNavigate();
+
   const categoryObj = categories.find((c) => c.id === categoryId);
+
   if (!categoryObj) {
-    // Si no existe la categoría, muestra mensaje de error
-    return <h2>Categoría no encontrada.</h2>;
+    return (
+      <div className="p-6 animate-fade-in">
+        <EmptyState
+          icon={<ChefHatIcon className="w-20 h-20" />}
+          title="Categoria no encontrada"
+          description="La categoria que buscas no existe o ha sido eliminada."
+          action
+          actionText="Ver todas las categorias"
+          onAction={() => navigate('/')}
+        />
+      </div>
+    );
   }
-  // Obtiene el nombre de la categoría
+
   const categoryName = categoryObj.name;
-  // Filtra las recetas por el nombre de la categoría, solo públicas y publicadas
   const filtered = recipes.filter((r) => r.category === categoryName && r.isPublic && r.status === 'published');
 
   if (filtered.length === 0) {
-    // Si no hay recetas para la categoría, muestra mensaje
-    return <h2>No se encontraron recetas para la categoría {categoryName}</h2>;
+    return (
+      <div className="p-6 animate-fade-in">
+        <h1 className="text-2xl font-bold mb-4">Recetas de {categoryName}</h1>
+        <EmptyState
+          icon={<ChefHatIcon className="w-20 h-20" />}
+          title="Sin recetas"
+          description={`Aun no hay recetas publicadas en la categoria ${categoryName}.`}
+          action
+          actionText="Agregar receta"
+          onAction={() => navigate('/add')}
+        />
+      </div>
+    );
   }
 
   return (
-    // Layout principal de la página de recetas por categoría
-    <div className="p-6 py-3">
+    <div className="p-6 py-3 animate-fade-in">
       <h1 className="text-2xl font-bold mb-4">Recetas de {categoryName}</h1>
-      {/* Lista de recetas filtradas por categoría usando RecipeCard */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {filtered.map((recipe) => (
           <RecipeCard key={recipe.id} recipe={recipe} />
@@ -42,5 +60,4 @@ function CategoryPage() {
   );
 }
 
-// Exporta el componente para su uso en las rutas
 export default CategoryPage;

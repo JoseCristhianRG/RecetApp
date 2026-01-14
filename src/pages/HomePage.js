@@ -34,7 +34,7 @@ function HomePage() {
 
   return (
     // Layout principal de la página de inicio
-    <div className="p-6">
+    <div className="p-6 animate-fade-in">
       <h2 className="text-xl font-bold mb-4">Últimas recetas añadidas</h2>
       {/* Lista de las últimas recetas con tarjetas visuales */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">

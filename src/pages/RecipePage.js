@@ -88,7 +88,7 @@ function RecipePage() {
         <div className='relative rounded overflow-hidden'>
           {/* Imagen de la receta */}
           <div className="titulo-categoria-box flex flex-col items-start">
-            <h1 className="text-4xl font-bold mb-1 text-green-800">{recipe.name}</h1>
+            <h1 className="text-4xl font-bold mb-1 text-pantonegreen">{recipe.name}</h1>
             <p className="text-gray-600 mb-2 italic text-lg">Categoría: {recipe.category}</p>
           </div>
           {recipe.imageUrl ? (
@@ -156,13 +156,13 @@ function RecipePage() {
               </button>
             </div>
           )}
-          <h2 className="text-xl font-semibold mb-2 text-green-700">Ingredientes</h2>
+          <h2 className="text-xl font-semibold mb-2 text-pantonegreen">Ingredientes</h2>
           <ul className="list-disc list-inside mb-4 pl-4">
             {recipe.ingredients.map((ing, idx) => (
               <li key={idx} className="mb-1">{ing}</li>
             ))}
           </ul>
-          <h2 className="text-xl font-semibold mb-2 text-green-700">Pasos</h2>
+          <h2 className="text-xl font-semibold mb-2 text-pantonegreen">Pasos</h2>
           {loading ? (
             <p className="text-gray-500">Cargando pasos...</p>
           ) : steps.length === 0 ? (
