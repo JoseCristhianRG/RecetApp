@@ -80,13 +80,15 @@ function App() {
                   aria-label="Inicio"
                 >
                   <div className="relative">
-                    <div className="w-11 h-11 rounded-2xl bg-gradient-forest flex items-center justify-center
-                      shadow-soft transition-all duration-300 group-hover:shadow-glow-forest group-hover:scale-105">
-                      <ChefHatIcon className="w-6 h-6 text-white" />
-                    </div>
-                    {/* Decorative dot */}
-                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-tangerine rounded-full
-                      opacity-0 group-hover:opacity-100 transition-all duration-300 group-hover:scale-110" />
+                    <img
+                      src={require('./images/icono.png')}
+                      alt="RecetApp Logo"
+                      className="w-12 h-12 object-contain transition-all duration-300
+                        group-hover:scale-110 drop-shadow-md"
+                    />
+                    {/* Decorative glow on hover */}
+                    <div className="absolute inset-0 bg-tangerine/20 rounded-full blur-xl
+                      opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10" />
                   </div>
                   <div className="flex flex-col">
                     <span className="font-display font-bold text-xl text-forest tracking-tight
