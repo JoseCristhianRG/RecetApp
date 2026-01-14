@@ -7,6 +7,84 @@ import { AuthContext } from '../AuthContext';
 import { HeartIcon, PencilIcon } from '../components/icons';
 import { LoadingSpinner } from '../components/ui';
 
+// Image Zoom Modal Component
+function ImageZoomModal({ isOpen, imageUrl, alt, onClose }) {
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen]);
+
+  useEffect(() => {
+    const handleEscape = (e) => {
+      if (e.key === 'Escape') onClose();
+    };
+    if (isOpen) {
+      window.addEventListener('keydown', handleEscape);
+    }
+    return () => window.removeEventListener('keydown', handleEscape);
+  }, [isOpen, onClose]);
+
+  if (!isOpen) return null;
+
+  return (
+    <div
+      className="fixed inset-0 z-50 bg-cocoa/95 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in"
+      onClick={onClose}
+    >
+      {/* Close Button */}
+      <button
+        onClick={onClose}
+        className="absolute top-4 right-4 p-3 rounded-full bg-white/10 text-white
+          hover:bg-white/20 transition-all duration-300 z-10"
+      >
+        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+
+      {/* Zoom hint */}
+      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 px-4 py-2 rounded-full bg-white/10 text-white/80 text-sm">
+        Click afuera o presiona ESC para cerrar
+      </div>
+
+      {/* Image Container */}
+      <div
+        className="relative max-w-[90vw] max-h-[85vh] animate-scale-in"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <img
+          src={imageUrl}
+          alt={alt}
+          className="max-w-full max-h-[85vh] object-contain rounded-2xl shadow-2xl"
+        />
+      </div>
+    </div>
+  );
+}
+
+// Zoomable Image Component
+function ZoomableImage({ src, alt, className, onClick }) {
+  return (
+    <div className="relative group cursor-zoom-in" onClick={onClick}>
+      <img src={src} alt={alt} className={className} />
+      {/* Zoom indicator */}
+      <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-cocoa/20">
+        <div className="p-3 rounded-full bg-white/90 shadow-soft">
+          <svg className="w-6 h-6 text-cocoa" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+          </svg>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function RecipePage() {
   const { recipeId } = useParams();
   const { recipes } = useContext(RecipesContext);
@@ -17,6 +95,7 @@ function RecipePage() {
   const [favoriteCount, setFavoriteCount] = useState(0);
   const [isFavorite, setIsFavorite] = useState(false);
   const [loadingFav, setLoadingFav] = useState(false);
+  const [zoomImage, setZoomImage] = useState({ isOpen: false, url: '', alt: '' });
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -79,6 +158,14 @@ function RecipePage() {
     setLoadingFav(false);
   };
 
+  const openZoom = (url, alt) => {
+    setZoomImage({ isOpen: true, url, alt });
+  };
+
+  const closeZoom = () => {
+    setZoomImage({ isOpen: false, url: '', alt: '' });
+  };
+
   if (!recipe) {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center px-4">
@@ -95,23 +182,51 @@ function RecipePage() {
     );
   }
 
+  const heroImageUrl = recipe.imageUrl || require('../images/no_image.png');
+
   return (
     <div className="min-h-screen animate-fade-in">
+      {/* Image Zoom Modal */}
+      <ImageZoomModal
+        isOpen={zoomImage.isOpen}
+        imageUrl={zoomImage.url}
+        alt={zoomImage.alt}
+        onClose={closeZoom}
+      />
+
       {/* Hero Section with Image */}
       <section className="relative">
-        {/* Full-width Image */}
-        <div className="relative h-[50vh] lg:h-[60vh] overflow-hidden">
+        {/* Full-width Image - Clickable for zoom */}
+        <div
+          className="relative h-[50vh] lg:h-[60vh] overflow-hidden cursor-zoom-in group"
+          onClick={() => recipe.imageUrl && openZoom(heroImageUrl, recipe.name)}
+        >
           <img
-            src={recipe.imageUrl || require('../images/no_image.png')}
+            src={heroImageUrl}
             alt={recipe.name}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
           />
           {/* Gradient Overlay */}
           <div className="absolute inset-0 bg-gradient-to-t from-cocoa/80 via-cocoa/30 to-transparent" />
 
+          {/* Zoom indicator on hover */}
+          {recipe.imageUrl && (
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2
+              opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+              <div className="p-4 rounded-full bg-white/90 shadow-lg">
+                <svg className="w-8 h-8 text-cocoa" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+                </svg>
+              </div>
+            </div>
+          )}
+
           {/* Back Button */}
           <button
-            onClick={() => navigate(-1)}
+            onClick={(e) => {
+              e.stopPropagation();
+              navigate(-1);
+            }}
             className="absolute top-4 left-4 z-10 p-3 rounded-full bg-white/90 backdrop-blur-sm shadow-soft
               text-cocoa hover:bg-white transition-all duration-300 hover:scale-105"
           >
@@ -121,7 +236,7 @@ function RecipePage() {
           </button>
 
           {/* Action Buttons */}
-          <div className="absolute top-4 right-4 z-10 flex gap-2">
+          <div className="absolute top-4 right-4 z-10 flex gap-2" onClick={(e) => e.stopPropagation()}>
             {/* Edit Button (if owner) */}
             {user && recipe.createdBy === user.uid && (
               <Link
@@ -153,7 +268,7 @@ function RecipePage() {
           </div>
 
           {/* Recipe Info Overlay */}
-          <div className="absolute bottom-0 left-0 right-0 p-6 lg:p-8">
+          <div className="absolute bottom-0 left-0 right-0 p-6 lg:p-8 pointer-events-none">
             <div className="max-w-4xl mx-auto">
               {/* Category Badge */}
               {recipe.category && (
@@ -264,14 +379,28 @@ function RecipePage() {
                           {step.description}
                         </p>
 
-                        {/* Step Image */}
+                        {/* Step Image - Zoomable */}
                         {step.imageUrl && (
-                          <div className="mt-4 rounded-2xl overflow-hidden shadow-soft">
-                            <img
-                              src={step.imageUrl}
-                              alt={`Paso ${idx + 1}`}
-                              className="w-full h-48 object-cover"
-                            />
+                          <div
+                            className="mt-4 rounded-2xl overflow-hidden shadow-soft cursor-zoom-in group"
+                            onClick={() => openZoom(step.imageUrl, `Paso ${idx + 1}: ${step.title}`)}
+                          >
+                            <div className="relative">
+                              <img
+                                src={step.imageUrl}
+                                alt={`Paso ${idx + 1}`}
+                                className="w-full h-48 object-cover transition-transform duration-500 group-hover:scale-105"
+                              />
+                              {/* Zoom indicator */}
+                              <div className="absolute inset-0 flex items-center justify-center
+                                opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-cocoa/20">
+                                <div className="p-3 rounded-full bg-white/90 shadow-soft">
+                                  <svg className="w-5 h-5 text-cocoa" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+                                  </svg>
+                                </div>
+                              </div>
+                            </div>
                           </div>
                         )}
                       </div>
