@@ -16,13 +16,13 @@ function CategoryPage() {
 
   if (!categoryObj) {
     return (
-      <div className="p-6 animate-fade-in">
+      <div className="min-h-[60vh] flex items-center justify-center px-4">
         <EmptyState
           icon={<ChefHatIcon className="w-20 h-20" />}
-          title="Categoria no encontrada"
-          description="La categoria que buscas no existe o ha sido eliminada."
+          title="Categoría no encontrada"
+          description="La categoría que buscas no existe o ha sido eliminada."
           action
-          actionText="Ver todas las categorias"
+          actionText="Ver todas las categorías"
           onAction={() => navigate('/')}
         />
       </div>
@@ -32,30 +32,78 @@ function CategoryPage() {
   const categoryName = categoryObj.name;
   const filtered = recipes.filter((r) => r.category === categoryName && r.isPublic && r.status === 'published');
 
-  if (filtered.length === 0) {
-    return (
-      <div className="p-6 animate-fade-in">
-        <h1 className="text-2xl font-bold mb-4">Recetas de {categoryName}</h1>
-        <EmptyState
-          icon={<ChefHatIcon className="w-20 h-20" />}
-          title="Sin recetas"
-          description={`Aun no hay recetas publicadas en la categoria ${categoryName}.`}
-          action
-          actionText="Agregar receta"
-          onAction={() => navigate('/add')}
-        />
-      </div>
-    );
-  }
-
   return (
-    <div className="p-6 py-3 animate-fade-in">
-      <h1 className="text-2xl font-bold mb-4">Recetas de {categoryName}</h1>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filtered.map((recipe) => (
-          <RecipeCard key={recipe.id} recipe={recipe} />
-        ))}
-      </div>
+    <div className="min-h-screen animate-fade-in">
+      {/* Category Header */}
+      <section className="relative overflow-hidden">
+        {/* Background */}
+        {categoryObj.image ? (
+          <div className="relative h-48 lg:h-64">
+            <img
+              src={categoryObj.image}
+              alt={categoryName}
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-cocoa/70 via-cocoa/30 to-transparent" />
+          </div>
+        ) : (
+          <div className="h-48 lg:h-64 bg-gradient-forest" />
+        )}
+
+        {/* Back Button */}
+        <button
+          onClick={() => navigate('/')}
+          className="absolute top-4 left-4 z-10 p-3 rounded-full bg-white/90 backdrop-blur-sm shadow-soft
+            text-cocoa hover:bg-white transition-all duration-300 hover:scale-105"
+        >
+          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
+
+        {/* Category Info */}
+        <div className="absolute bottom-0 left-0 right-0 p-6">
+          <div className="max-w-7xl mx-auto">
+            <span className="font-handwritten text-white/80 text-xl">Categoría</span>
+            <h1 className="font-display text-3xl lg:text-4xl font-bold text-white drop-shadow-lg">
+              {categoryName}
+            </h1>
+            <p className="font-body text-white/80 mt-1">
+              {filtered.length} {filtered.length === 1 ? 'receta' : 'recetas'}
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Recipes Grid */}
+      <section className="py-8">
+        <div className="max-w-7xl mx-auto px-4 lg:px-8">
+          {filtered.length === 0 ? (
+            <div className="py-12">
+              <EmptyState
+                icon={<ChefHatIcon className="w-20 h-20" />}
+                title="Sin recetas aún"
+                description={`Aún no hay recetas publicadas en ${categoryName}.`}
+                action
+                actionText="Agregar receta"
+                onAction={() => navigate('/add')}
+              />
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filtered.map((recipe, index) => (
+                <div
+                  key={recipe.id}
+                  className="animate-fade-in-up"
+                  style={{ animationDelay: `${index * 0.1}s` }}
+                >
+                  <RecipeCard recipe={recipe} />
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
     </div>
   );
 }

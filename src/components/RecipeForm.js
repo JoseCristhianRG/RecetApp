@@ -126,7 +126,7 @@ function RecipeForm({
       <div className="absolute left-0 right-0 h-1 bg-gray-200 z-0" style={{ top: '115%' }}></div>
       {/* Línea de progreso */}
       <div
-        className="absolute left-0 h-1 bg-pantoneyellow z-10 transition-all"
+        className="absolute left-0 h-1 bg-honey z-10 transition-all"
         style={{
           width: `${(step / (steps.length - 1)) * 100}%`,
           top: '115%',
@@ -139,13 +139,13 @@ function RecipeForm({
             disabled={!canGoToStep(idx)}
             onClick={() => canGoToStep(idx) && setStep(idx)}
             className={`w-8 h-8 flex items-center justify-center rounded-full font-bold border-2 transition-all focus:outline-none
-              ${step === idx ? 'bg-pantonegreen text-white border-pantonegreen' : step > idx ? 'bg-pantoneyellow text-pantoneblack border-pantoneyellow' : 'bg-gray-200 text-gray-400 border-gray-300'}
+              ${step === idx ? 'bg-forest text-white border-forest' : step > idx ? 'bg-honey text-cocoa border-honey' : 'bg-gray-200 text-gray-400 border-gray-300'}
               ${canGoToStep(idx) ? 'cursor-pointer' : 'cursor-not-allowed'}`}
             title={label}
           >
             {idx + 1}
           </button>
-          <span className={`text-xs mt-1 text-center ${step === idx ? 'text-pantonegreen font-bold' : 'text-gray-500'}`}>{label}</span>
+          <span className={`text-xs mt-1 text-center ${step === idx ? 'text-forest font-bold' : 'text-gray-500'}`}>{label}</span>
         </div>
       ))}
     </div>
@@ -160,7 +160,7 @@ function RecipeForm({
             <h2 className="text-xl font-bold mb-2">Nombre e imagen</h2>
             {/* Imagen previsualización en recuadro arriba, ahora clickeable y rectangular */}
             <div className="flex flex-col items-center mb-4">
-              <label htmlFor="main-image-upload" className="w-64 h-40 border-2 border-gray-200 rounded flex items-center justify-center bg-gray-50 overflow-hidden cursor-pointer hover:border-pantonegreen transition-all">
+              <label htmlFor="main-image-upload" className="w-64 h-40 border-2 border-gray-200 rounded flex items-center justify-center bg-gray-50 overflow-hidden cursor-pointer hover:border-forest transition-all">
                 {form.image ? (
                   <img
                     src={URL.createObjectURL(form.image)}
@@ -217,8 +217,8 @@ function RecipeForm({
                   type="button"
                   onClick={() => handleChange('category', cat.name)}
                   className={`p-4 rounded-lg border-2 transition-all flex items-center justify-center text-center font-medium
-                    ${form.category === cat.name ? 'border-pantonegreen bg-pantoneyellow text-pantoneblack' : 'border-gray-200 bg-white text-gray-700'}
-                    hover:border-pantonegreen hover:bg-pantonegreen/10 focus:outline-none`}
+                    ${form.category === cat.name ? 'border-forest bg-honey text-cocoa' : 'border-gray-200 bg-white text-gray-700'}
+                    hover:border-forest hover:bg-forest/10 focus:outline-none`}
                 >
                   {cat.name}
                 </button>
@@ -264,7 +264,7 @@ function RecipeForm({
                   )}
                 </div>
               ))}
-              <button type="button" onClick={handleAddIngredient} className="text-xs text-pantonegreen underline">Agregar ingrediente</button>
+              <button type="button" onClick={handleAddIngredient} className="text-xs text-forest underline">Agregar ingrediente</button>
               {errors.ingredients && <p className="text-red-500 text-xs mt-1">{errors.ingredients}</p>}
             </div>
           </>
@@ -303,7 +303,7 @@ function RecipeForm({
                   )}
                 </div>
               ))}
-              <button type="button" onClick={handleAddStep} className="text-xs text-pantonegreen underline">Agregar paso</button>
+              <button type="button" onClick={handleAddStep} className="text-xs text-forest underline">Agregar paso</button>
               {(errors.steps || errors.stepsDesc) && <p className="text-red-500 text-xs mt-1">{errors.steps || errors.stepsDesc}</p>}
             </div>
           </>
@@ -317,7 +317,7 @@ function RecipeForm({
               <Switch
                 checked={form.isPublic}
                 onChange={v => handleChange('isPublic', v)}
-                className={`${form.isPublic ? 'bg-pantonegreen' : 'bg-pantonebrown'} relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none`}
+                className={`${form.isPublic ? 'bg-forest' : 'bg-cocoa'} relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none`}
               >
                 <span className="sr-only">Pública</span>
                 <span
@@ -331,7 +331,7 @@ function RecipeForm({
               <Switch
                 checked={form.status === 'published'}
                 onChange={v => handleChange('status', v ? 'published' : 'draft')}
-                className={`${form.status === 'published' ? 'bg-blue-600' : 'bg-pantoneyellow'} relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none`}
+                className={`${form.status === 'published' ? 'bg-blue-600' : 'bg-honey'} relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none`}
               >
                 <span className="sr-only">Publicada</span>
                 <span
@@ -356,13 +356,13 @@ function RecipeForm({
                     }
                   }}
                 />
-                <button type="button" onClick={handleAddTag} className="px-3 py-1 bg-pantonegreen text-white rounded">Agregar</button>
+                <button type="button" onClick={handleAddTag} className="px-3 py-1 bg-forest text-white rounded">Agregar</button>
               </div>
               <div className="flex flex-wrap gap-2">
                 {form.tags.map(tag => (
-                  <span key={tag} className="bg-pantoneyellow text-pantoneblack px-2 py-1 rounded text-xs flex items-center gap-1">
+                  <span key={tag} className="bg-honey text-cocoa px-2 py-1 rounded text-xs flex items-center gap-1">
                     {tag}
-                    <button type="button" onClick={() => handleRemoveTag(tag)} className="text-pantonebrown font-bold ml-1">×</button>
+                    <button type="button" onClick={() => handleRemoveTag(tag)} className="text-cocoa font-bold ml-1">×</button>
                   </span>
                 ))}
               </div>
@@ -382,7 +382,7 @@ function RecipeForm({
           {renderStep()}
           <div className="flex justify-between mt-6">
             {step > 0 && (
-              <button type="button" onClick={() => setStep(step - 1)} className="px-4 py-2 bg-pantonebrown text-white rounded hover:bg-pantoneblack transition font-bold">
+              <button type="button" onClick={() => setStep(step - 1)} className="px-4 py-2 bg-cocoa text-white rounded hover:bg-cocoa transition font-bold">
                 Anterior
               </button>
             )}
@@ -391,7 +391,7 @@ function RecipeForm({
               <button
                 type="button"
                 onClick={() => validateStep() && setStep(step + 1)}
-                className={`px-4 py-2 bg-pantonegreen text-white rounded hover:bg-pantoneyellow hover:text-pantoneblack transition font-bold ml-auto ${!validateStep() ? 'opacity-50 cursor-not-allowed' : ''}`}
+                className={`px-4 py-2 bg-forest text-white rounded hover:bg-honey hover:text-cocoa transition font-bold ml-auto ${!validateStep() ? 'opacity-50 cursor-not-allowed' : ''}`}
                 disabled={!validateStep()}
               >
                 Siguiente
@@ -400,7 +400,7 @@ function RecipeForm({
               step === 4 && (
                 <button
                   type="submit"
-                  className={`px-4 py-2 bg-pantonegreen text-white rounded hover:bg-pantoneyellow hover:text-pantoneblack transition font-bold ml-auto ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  className={`px-4 py-2 bg-forest text-white rounded hover:bg-honey hover:text-cocoa transition font-bold ml-auto ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
                   disabled={loading}
                 >
                   {loading ? 'Guardando...' : submitText}

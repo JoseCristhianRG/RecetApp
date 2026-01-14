@@ -142,7 +142,7 @@ function AddRecipePage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
           <div className="bg-white rounded-lg shadow-lg p-8 flex flex-col items-center">
             <span className="loader mb-4"></span>
-            <span className="text-lg font-bold text-pantonegreen">Generando receta...</span>
+            <span className="text-lg font-bold text-forest">Generando receta...</span>
           </div>
         </div>
       )}
@@ -166,7 +166,7 @@ function AddRecipePage() {
               setModalOpen(false);
               if (createdRecipeId) navigate(`/edit-recipe/${createdRecipeId}`);
             }}
-            className="w-full px-4 py-2 bg-pantonegreen text-white rounded hover:bg-pantoneyellow hover:text-pantoneblack transition font-bold"
+            className="w-full px-4 py-2 bg-forest text-white rounded hover:bg-honey hover:text-cocoa transition font-bold"
           >
             ¡A cocinar!
           </button>

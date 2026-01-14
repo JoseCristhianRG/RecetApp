@@ -101,16 +101,16 @@ function CategoriesPage() {
           placeholder="Nombre de la categoría"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className="w-full p-2 border border-pantonebrown rounded text-pantoneblack"
+          className="w-full p-2 border border-cocoa rounded text-cocoa"
         />
         <input
           type="file"
           onChange={(e) => setImage(e.target.files[0])}
-          className="w-full p-2 border border-pantonebrown rounded text-pantoneblack"
+          className="w-full p-2 border border-cocoa rounded text-cocoa"
         />
         <button
           type="submit"
-          className={`w-full px-4 py-2 text-white rounded shadow transition ${editingId ? 'bg-pantoneyellow hover:bg-pantonegreen text-pantoneblack' : 'bg-pantonegreen hover:bg-pantoneyellow text-pantoneblack'}`}
+          className={`w-full px-4 py-2 text-white rounded shadow transition ${editingId ? 'bg-honey hover:bg-forest text-cocoa' : 'bg-forest hover:bg-honey text-cocoa'}`}
         >
           {editingId ? 'Actualizar categoría' : 'Agregar categoría'}
         </button>
@@ -118,7 +118,7 @@ function CategoriesPage() {
           <button
             type="button"
             onClick={resetForm}
-            className="w-full px-4 py-2 bg-pantonebrown text-white rounded shadow hover:bg-pantoneblack transition"
+            className="w-full px-4 py-2 bg-cocoa text-white rounded shadow hover:bg-cocoa transition"
           >
             Cancelar
           </button>
@@ -133,21 +133,21 @@ function CategoriesPage() {
                 <img
                   src={cat.image}
                   alt={cat.name}
-                  className="w-12 h-12 object-cover rounded-full mr-3 border-2 border-pantonebrown"
+                  className="w-12 h-12 object-cover rounded-full mr-3 border-2 border-cocoa"
                 />
               )}
-              <h2 className="text-lg font-bold text-pantoneblack">{cat.name}</h2>
+              <h2 className="text-lg font-bold text-cocoa">{cat.name}</h2>
             </div>
             <div className="flex space-x-2">
               <button
                 onClick={() => handleEdit(cat)}
-                className="px-2 py-1 bg-pantoneyellow text-pantoneblack rounded hover:bg-pantonegreen transition"
+                className="px-2 py-1 bg-honey text-cocoa rounded hover:bg-forest transition"
               >
                 Editar
               </button>
               <button
                 onClick={() => handleDelete(cat.id)}
-                className="px-2 py-1 bg-pantonebrown text-white rounded hover:bg-pantoneblack transition"
+                className="px-2 py-1 bg-cocoa text-white rounded hover:bg-cocoa transition"
               >
                 Eliminar
               </button>
@@ -165,7 +165,7 @@ function CategoriesPage() {
             onClick={() => {
               if (modal.onConfirm) modal.onConfirm();
             }}
-            className="px-4 py-2 bg-pantonebrown text-white rounded hover:bg-pantoneblack transition"
+            className="px-4 py-2 bg-cocoa text-white rounded hover:bg-cocoa transition"
           >
             Confirmar
           </button>

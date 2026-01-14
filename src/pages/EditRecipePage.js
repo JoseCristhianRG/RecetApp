@@ -170,7 +170,7 @@ function EditRecipePage() {
               setModalOpen(false);
               fetchRecipe();
             }}
-            className="w-full px-4 py-2 bg-pantonegreen text-white rounded hover:bg-pantoneyellow hover:text-pantoneblack transition font-bold"
+            className="w-full px-4 py-2 bg-forest text-white rounded hover:bg-honey hover:text-cocoa transition font-bold"
           >
             ¡A cocinar!
           </button>

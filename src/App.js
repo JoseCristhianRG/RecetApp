@@ -20,7 +20,7 @@ import UserProfilePage from './pages/UserProfilePage';
 import { db } from './firebase';
 import { doc, getDoc } from 'firebase/firestore';
 import BottomNavBar from './components/BottomNavBar';
-import { PlusIcon } from './components/icons';
+import { PlusIcon, ChefHatIcon } from './components/icons';
 import { LoadingSpinner } from './components/ui';
 
 function App() {
@@ -28,7 +28,7 @@ function App() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [userPhoto, setUserPhoto] = useState(null);
   const navigate = useNavigate();
-  const location = useLocation(); // <-- Añadido para saber la ruta actual
+  const location = useLocation();
 
   useEffect(() => {
     if (!user) {
@@ -46,92 +46,164 @@ function App() {
     fetchPhoto();
   }, [user]);
 
+  // Nav link component with pill styling
+  const NavLink = ({ to, children, accent = false }) => {
+    const isActive = location.pathname === to;
+    return (
+      <Link
+        to={to}
+        className={`px-4 py-2 rounded-full text-sm font-display font-semibold transition-all duration-300
+          ${isActive
+            ? 'bg-forest text-white shadow-soft'
+            : accent
+              ? 'text-tangerine hover:bg-tangerine-50'
+              : 'text-cocoa hover:bg-cream-200'
+          }`}
+      >
+        {children}
+      </Link>
+    );
+  };
+
   return (
     <CategoriesProvider>
       <IngredientsProvider>
         <RecipesProvider>
-          <div className="bg-pattern min-h-screen text-pantoneblack">
-            {/* Header moderno */}
-            <header className="bg-white/90 shadow-sm sticky top-0 z-30">
-              <nav className="mx-auto flex max-w-7xl items-center justify-between p-4 lg:px-8" aria-label="Main">
-                <div className="flex items-center gap-3">
-                  <Link to="/" className="flex items-center gap-2" aria-label="Inicio">
-                    <img src={require('./images/icono.png')} alt="Logo" className="h-10 w-10 rounded-full border border-pantonegreen" />
-                    <span className="font-bold text-xl text-pantonegreen tracking-tight">RecetApp</span>
-                  </Link>
-                </div>
-                <div className="flex items-center gap-2 lg:hidden">
+          <div className="min-h-screen">
+            {/* Fresh Modern Header */}
+            <header className="glass sticky top-0 z-30 border-b border-white/50">
+              <nav className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 lg:px-8" aria-label="Main">
+                {/* Logo */}
+                <Link
+                  to="/"
+                  className="flex items-center gap-3 group"
+                  aria-label="Inicio"
+                >
+                  <div className="relative">
+                    <div className="w-11 h-11 rounded-2xl bg-gradient-forest flex items-center justify-center
+                      shadow-soft transition-all duration-300 group-hover:shadow-glow-forest group-hover:scale-105">
+                      <ChefHatIcon className="w-6 h-6 text-white" />
+                    </div>
+                    {/* Decorative dot */}
+                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-tangerine rounded-full
+                      opacity-0 group-hover:opacity-100 transition-all duration-300 group-hover:scale-110" />
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="font-display font-bold text-xl text-forest tracking-tight
+                      group-hover:text-forest-dark transition-colors duration-300">
+                      RecetApp
+                    </span>
+                    <span className="font-handwritten text-xs text-cocoa-light -mt-1 hidden sm:block">
+                      Cocina con amor
+                    </span>
+                  </div>
+                </Link>
+
+                {/* Mobile: User Avatar */}
+                <div className="flex items-center gap-3 lg:hidden">
                   {user && (
-                    <Link to="/perfil" className="flex items-center group" title="Mi Perfil">
+                    <Link
+                      to="/perfil"
+                      className="relative group"
+                      title="Mi Perfil"
+                    >
+                      <div className="absolute inset-0 bg-gradient-tangerine rounded-full opacity-0
+                        group-hover:opacity-100 transition-opacity duration-300 blur-sm" />
                       <img
                         src={userPhoto || require('./images/icono.png')}
                         alt="Avatar"
-                        className="w-9 h-9 rounded-full border-2 border-pantonegreen object-cover group-hover:opacity-80 transition"
+                        className="relative w-10 h-10 rounded-full border-2 border-white object-cover
+                          shadow-soft transition-all duration-300 group-hover:scale-105"
                       />
+                      {/* Online indicator */}
+                      <div className="absolute bottom-0 right-0 w-3 h-3 bg-mint border-2 border-white rounded-full" />
                     </Link>
                   )}
                 </div>
-                {/* Links desktop */}
-                <div className="hidden lg:flex gap-2 items-center">
+
+                {/* Desktop Navigation */}
+                <div className="hidden lg:flex items-center gap-2">
                   {!user ? (
-                    <Link to="/login" className="text-sm font-semibold leading-6 text-pantonegreen hover:text-pantonebrown transition">Iniciar sesión</Link>
+                    <Link
+                      to="/login"
+                      className="btn-primary text-sm"
+                    >
+                      Iniciar sesión
+                    </Link>
                   ) : (
                     <>
-                      <Link to="/add" className="text-sm font-semibold leading-6 text-pantonegreen hover:text-pantonebrown transition">Agregar receta</Link>
+                      <NavLink to="/add">Agregar receta</NavLink>
                       {userRole === 'admin' && (
-                        <Link to="/categories" className="text-sm font-semibold leading-6 text-pantonegreen hover:text-pantonebrown transition">Categorías</Link>
+                        <NavLink to="/categories">Categorías</NavLink>
                       )}
-                      <Link to="/mis-recetas" className="text-sm font-semibold leading-6 text-pantonegreen hover:text-pantonebrown transition">Mis Recetas</Link>
-                      <Link to="/mis-favoritos" className="text-sm font-semibold leading-6 text-pantonegreen hover:text-pantonebrown transition">Mis Favoritos</Link>
+                      <NavLink to="/mis-recetas">Mis Recetas</NavLink>
+                      <NavLink to="/mis-favoritos">Favoritos</NavLink>
                       {userRole === 'admin' && (
-                        <Link to="/admin/usuarios" className="text-sm font-semibold leading-6 text-pantonebrown hover:text-pantonegreen transition">Usuarios</Link>
+                        <NavLink to="/admin/usuarios" accent>Usuarios</NavLink>
                       )}
-                      {/* Avatar usuario a la derecha */}
-                      <Link to="/perfil" className="ml-4 flex items-center group" title="Mi Perfil">
+
+                      {/* User Avatar - Desktop */}
+                      <Link
+                        to="/perfil"
+                        className="relative ml-3 group"
+                        title="Mi Perfil"
+                      >
+                        <div className="absolute inset-0 bg-gradient-tangerine rounded-full opacity-0
+                          group-hover:opacity-100 transition-opacity duration-300 blur-sm scale-110" />
                         <img
                           src={userPhoto || require('./images/icono.png')}
                           alt="Avatar"
-                          className="w-9 h-9 rounded-full border-2 border-pantonegreen object-cover group-hover:opacity-80 transition"
+                          className="relative w-10 h-10 rounded-full border-2 border-white object-cover
+                            shadow-soft transition-all duration-300 group-hover:scale-105 group-hover:border-tangerine"
                         />
+                        {/* Online indicator */}
+                        <div className="absolute bottom-0 right-0 w-3 h-3 bg-mint border-2 border-white rounded-full" />
                       </Link>
                     </>
                   )}
                 </div>
               </nav>
-              {/* Menú mobile */}
-              {/* Eliminado menú hamburguesa y menú mobile, ya no es necesario */}
             </header>
-            {/* Card general blanco */}
-            <div className="bg-white rounded-xl shadow-lg max-w-lg md:max-w-2xl xl:max-w-4xl mx-auto mt-4" style={{ marginBottom: '100px' }}>
-              <div className="">
-                <Routes>
-                  <Route path="/login" element={<LoginPage />} />
-                  <Route path="/signup" element={<SignupPage />} />
-                  <Route path="/" element={<HomePage />} />
-                  <Route path="/add" element={<RequireAuth><AddRecipePage /></RequireAuth>} />
-                  <Route path="/category/:categoryId" element={<CategoryPage />} />
-                  <Route path="/recipe/:recipeId" element={<RecipePage />} />
-                  <Route path="/categories" element={<RequireAuth><AdminRoute><CategoriesPage /></AdminRoute></RequireAuth>} />
-                  <Route path="/mis-recetas" element={<RequireAuth><MisRecetasPage /></RequireAuth>} />
-                  <Route path="/mis-favoritos" element={<RequireAuth><MisFavoritosPage /></RequireAuth>} />
-                  <Route path="/edit-recipe/:id" element={<RequireAuth><EditRecipePage /></RequireAuth>} />
-                  {/* Ruta protegida solo para admins */}
-                  <Route path="/admin/usuarios" element={<RequireAuth><AdminRoute><UsersPage /></AdminRoute></RequireAuth>} />
-                  {/* Ruta de perfil de usuario */}
-                  <Route path="/perfil" element={<RequireAuth><UserProfilePage /></RequireAuth>} />
-                </Routes>
-              </div>
-            </div>
+
+            {/* Main Content Area */}
+            <main className="pb-32 lg:pb-8">
+              <Routes>
+                <Route path="/login" element={<LoginPage />} />
+                <Route path="/signup" element={<SignupPage />} />
+                <Route path="/" element={<HomePage />} />
+                <Route path="/add" element={<RequireAuth><AddRecipePage /></RequireAuth>} />
+                <Route path="/category/:categoryId" element={<CategoryPage />} />
+                <Route path="/recipe/:recipeId" element={<RecipePage />} />
+                <Route path="/categories" element={<RequireAuth><AdminRoute><CategoriesPage /></AdminRoute></RequireAuth>} />
+                <Route path="/mis-recetas" element={<RequireAuth><MisRecetasPage /></RequireAuth>} />
+                <Route path="/mis-favoritos" element={<RequireAuth><MisFavoritosPage /></RequireAuth>} />
+                <Route path="/edit-recipe/:id" element={<RequireAuth><EditRecipePage /></RequireAuth>} />
+                <Route path="/admin/usuarios" element={<RequireAuth><AdminRoute><UsersPage /></AdminRoute></RequireAuth>} />
+                <Route path="/perfil" element={<RequireAuth><UserProfilePage /></RequireAuth>} />
+              </Routes>
+            </main>
+
+            {/* Bottom Navigation */}
             <BottomNavBar />
-            {/* Botón flotante para añadir receta */}
+
+            {/* Floating Add Recipe Button */}
             {user && !location.pathname.startsWith('/add') && !location.pathname.startsWith('/edit-recipe') && (
               <button
                 onClick={() => navigate('/add')}
-                className="fixed bottom-20 right-5 z-50 bg-pantonegreen text-white rounded-full shadow-lg w-14 h-14 flex items-center justify-center transition-all duration-200 hover:bg-primary-dark hover:scale-110"
+                className="fixed bottom-24 right-5 z-50 lg:bottom-8
+                  w-14 h-14 rounded-2xl
+                  bg-gradient-tangerine text-white
+                  shadow-glow-tangerine
+                  flex items-center justify-center
+                  transition-all duration-300 ease-out
+                  hover:scale-110 hover:shadow-lg
+                  active:scale-95
+                  animate-fade-in-up"
                 title="Añadir receta"
-                style={{ boxShadow: '0 4px 16px rgba(0,0,0,0.18)' }}
               >
-                <PlusIcon className="w-8 h-8" />
+                <PlusIcon className="w-7 h-7" />
+                {/* Decorative ring */}
+                <div className="absolute inset-0 rounded-2xl border-2 border-white/30 pointer-events-none" />
               </button>
             )}
           </div>
@@ -141,11 +213,12 @@ function App() {
   );
 }
 
-// AdminRoute: componente para proteger rutas solo para administradores
+// AdminRoute: component to protect routes for administrators only
 function AdminRoute({ children }) {
   const { user } = useContext(AuthContext);
   const [role, setRole] = useState(null);
   const [loading, setLoading] = useState(true);
+
   useEffect(() => {
     if (!user) return;
     import('firebase/firestore').then(({ getDoc, doc: docRef }) => {
@@ -157,9 +230,17 @@ function AdminRoute({ children }) {
       });
     });
   }, [user]);
-  if (loading) return <div className="p-6 flex justify-center"><LoadingSpinner text="Cargando..." /></div>;
+
+  if (loading) {
+    return (
+      <div className="min-h-[50vh] flex items-center justify-center">
+        <LoadingSpinner text="Cargando..." />
+      </div>
+    );
+  }
+
   if (role !== 'admin') return <Navigate to="/" replace />;
-  
+
   return children;
 }
 

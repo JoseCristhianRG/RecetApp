@@ -1,20 +1,23 @@
 import React, { useContext, useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { RecipesContext } from '../RecipesContext';
 import { db } from '../firebase';
 import { collection, query, where, getDocs, orderBy, addDoc, deleteDoc } from 'firebase/firestore';
 import { AuthContext } from '../AuthContext';
-import { Link } from 'react-router-dom';
+import { HeartIcon, PencilIcon } from '../components/icons';
+import { LoadingSpinner } from '../components/ui';
 
 function RecipePage() {
   const { recipeId } = useParams();
   const { recipes } = useContext(RecipesContext);
   const [steps, setSteps] = useState([]);
   const [loading, setLoading] = useState(true);
-  const { user } = React.useContext(AuthContext);
+  const { user } = useContext(AuthContext);
   const recipe = recipes.find((r) => r.id === recipeId);
   const [favoriteCount, setFavoriteCount] = useState(0);
   const [isFavorite, setIsFavorite] = useState(false);
+  const [loadingFav, setLoadingFav] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     async function fetchSteps() {
@@ -29,7 +32,7 @@ function RecipePage() {
       setLoading(false);
     }
     fetchSteps();
-    // Contar favoritos de la receta
+
     async function fetchFavoriteCount() {
       if (!recipeId) return;
       const favsQuery = query(collection(db, 'favorites'), where('recipeId', '==', recipeId));
@@ -37,7 +40,7 @@ function RecipePage() {
       setFavoriteCount(favsSnap.size);
     }
     fetchFavoriteCount();
-    // Saber si el usuario actual la tiene en favoritos
+
     async function fetchIsFavorite() {
       if (!user || !recipeId) return setIsFavorite(false);
       const favQuery = query(
@@ -52,7 +55,8 @@ function RecipePage() {
   }, [recipeId, user]);
 
   const handleToggleFavorite = async () => {
-    if (!user) return;
+    if (!user || loadingFav) return;
+    setLoadingFav(true);
     const favQuery = query(
       collection(db, 'favorites'),
       where('userId', '==', user.uid),
@@ -60,12 +64,10 @@ function RecipePage() {
     );
     const favSnap = await getDocs(favQuery);
     if (!favSnap.empty) {
-      // Eliminar favorito
       await deleteDoc(favSnap.docs[0].ref);
       setFavoriteCount(favoriteCount - 1);
       setIsFavorite(false);
     } else {
-      // Agregar favorito
       await addDoc(collection(db, 'favorites'), {
         userId: user.uid,
         recipeId: recipe.id,
@@ -74,116 +76,241 @@ function RecipePage() {
       setFavoriteCount(favoriteCount + 1);
       setIsFavorite(true);
     }
-    // Forzar actualización visual si se usa en otros lugares
+    setLoadingFav(false);
   };
 
   if (!recipe) {
-    return <h2 className="text-center text-2xl mt-10">Receta no encontrada</h2>;
+    return (
+      <div className="min-h-[60vh] flex flex-col items-center justify-center px-4">
+        <span className="text-6xl mb-4">🍽️</span>
+        <h2 className="font-display text-2xl font-bold text-cocoa mb-2">Receta no encontrada</h2>
+        <p className="font-body text-cocoa-light mb-6">Esta receta no existe o ha sido eliminada</p>
+        <button
+          onClick={() => navigate('/')}
+          className="btn-primary"
+        >
+          Volver al inicio
+        </button>
+      </div>
+    );
   }
 
   return (
-    <div className="flex justify-center items-center min-h-[80vh]">
-      <div className="bg-white w-full h-full min-h-[80vh] relative p-0 rounded shadow-none">
-        {/* Título de la receta */}
-        <div className='relative rounded overflow-hidden'>
-          {/* Imagen de la receta */}
-          <div className="titulo-categoria-box flex flex-col items-start">
-            <h1 className="text-4xl font-bold mb-1 text-pantonegreen">{recipe.name}</h1>
-            <p className="text-gray-600 mb-2 italic text-lg">Categoría: {recipe.category}</p>
-          </div>
-          {recipe.imageUrl ? (
-            <img
-              src={recipe.imageUrl}
-              alt={recipe.name}
-              className="w-full h-[400px] object-cover object-center m-0 p-0 border-0 rounded-none"
-              style={{ display: 'block' }}
-            />
-          ) : (
-            <img
-              src={require('../images/no_image.png')}
-              alt="Sin imagen"
-              className="w-full h-[400px] object-cover object-center m-0 p-0 border-0 rounded-none"
-              style={{ display: 'block' }}
-            />
-          )}
-        </div>
-        <div className="p-6 py-3">
-          {/* Icono de editar si el usuario es el creador, justo debajo de la imagen a la derecha */}
-          {user && recipe.createdBy === user.uid && (
-            <div className="flex justify-end mb-7">
-              <Link to={`/edit-recipe/${recipe.id}`} className="text-pantonegreen hover:text-pantonebrown flex items-center gap-1" title="Editar receta">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16.862 3.487a2.25 2.25 0 113.182 3.182l-10.61 10.61a2 2 0 01-.878.513l-4.01 1.07a.5.5 0 01-.617-.617l1.07-4.01a2 2 0 01.513-.878l10.61-10.61z" />
-                </svg>
-                <span className="text-sm font-medium">Editar</span>
+    <div className="min-h-screen animate-fade-in">
+      {/* Hero Section with Image */}
+      <section className="relative">
+        {/* Full-width Image */}
+        <div className="relative h-[50vh] lg:h-[60vh] overflow-hidden">
+          <img
+            src={recipe.imageUrl || require('../images/no_image.png')}
+            alt={recipe.name}
+            className="w-full h-full object-cover"
+          />
+          {/* Gradient Overlay */}
+          <div className="absolute inset-0 bg-gradient-to-t from-cocoa/80 via-cocoa/30 to-transparent" />
+
+          {/* Back Button */}
+          <button
+            onClick={() => navigate(-1)}
+            className="absolute top-4 left-4 z-10 p-3 rounded-full bg-white/90 backdrop-blur-sm shadow-soft
+              text-cocoa hover:bg-white transition-all duration-300 hover:scale-105"
+          >
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+
+          {/* Action Buttons */}
+          <div className="absolute top-4 right-4 z-10 flex gap-2">
+            {/* Edit Button (if owner) */}
+            {user && recipe.createdBy === user.uid && (
+              <Link
+                to={`/edit-recipe/${recipe.id}`}
+                className="p-3 rounded-full bg-white/90 backdrop-blur-sm shadow-soft
+                  text-forest hover:bg-white transition-all duration-300 hover:scale-105"
+                title="Editar receta"
+              >
+                <PencilIcon className="w-5 h-5" />
               </Link>
+            )}
+
+            {/* Favorite Button */}
+            {user && (
+              <button
+                onClick={handleToggleFavorite}
+                disabled={loadingFav}
+                className={`p-3 rounded-full shadow-soft transition-all duration-300 hover:scale-105
+                  ${isFavorite
+                    ? 'bg-tangerine text-white shadow-glow-tangerine'
+                    : 'bg-white/90 backdrop-blur-sm text-tangerine hover:bg-white'
+                  }
+                  ${loadingFav ? 'opacity-50' : ''}`}
+                title={isFavorite ? 'Quitar de favoritos' : 'Agregar a favoritos'}
+              >
+                <HeartIcon className="w-5 h-5" filled={isFavorite} />
+              </button>
+            )}
+          </div>
+
+          {/* Recipe Info Overlay */}
+          <div className="absolute bottom-0 left-0 right-0 p-6 lg:p-8">
+            <div className="max-w-4xl mx-auto">
+              {/* Category Badge */}
+              {recipe.category && (
+                <span className="inline-block px-4 py-1.5 rounded-full bg-forest/90 backdrop-blur-sm
+                  text-white text-sm font-display font-semibold mb-3">
+                  {recipe.category}
+                </span>
+              )}
+
+              {/* Title */}
+              <h1 className="font-display text-3xl lg:text-4xl font-bold text-white mb-2 drop-shadow-lg">
+                {recipe.name}
+              </h1>
+
+              {/* Favorite Count */}
+              <div className="flex items-center gap-2 text-white/90">
+                <HeartIcon className="w-5 h-5 text-tangerine-light" filled />
+                <span className="font-body text-sm">
+                  {favoriteCount} {favoriteCount === 1 ? 'persona' : 'personas'} ama esta receta
+                </span>
+              </div>
             </div>
-          )}
-          {recipe.tags && recipe.tags.length > 0 && (
-            <div className="mb-3 mt-2 flex items-center justify-between w-full">
-              <div className="flex flex-wrap items-center gap-2">
+          </div>
+        </div>
+      </section>
+
+      {/* Content */}
+      <section className="relative -mt-6 z-10">
+        <div className="max-w-4xl mx-auto px-4 lg:px-8">
+          {/* Main Card */}
+          <div className="bg-white rounded-t-3xl shadow-soft-lg">
+            {/* Tags */}
+            {recipe.tags && recipe.tags.length > 0 && (
+              <div className="px-6 pt-6 flex flex-wrap gap-2">
                 {recipe.tags.map((tag, idx) => (
-                  <span key={idx} className="bg-pantoneyellow text-pantoneblack px-2 py-1 rounded text-xs">{tag}</span>
+                  <span key={idx} className="badge-honey text-sm">
+                    {tag}
+                  </span>
                 ))}
               </div>
-              <button
-                type="button"
-                onClick={handleToggleFavorite}
-                className="inline-flex items-center gap-1 px-3 py-1 font-semibold rounded-full shadow transition ml-4 cursor-pointer"
-                tabIndex={-1}
-                style={{
-                  '--tw-ring-offset-shadow': 'var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color)',
-                  '--tw-ring-shadow': 'var(--tw-ring-inset) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color)',
-                  boxShadow: 'var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000)',
-                  '--tw-ring-opacity': '1',
-                  '--tw-ring-color': '#ef4444',
-                  alignItems: 'center',
-                  padding: '5px 10px',
-                }}
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill={isFavorite ? '#F43F5E' : 'none'}
-                  viewBox="0 0 24 24"
-                  strokeWidth="1.5"
-                  stroke="#F43F5E"
-                  className="w-5 h-5"
-                  style={{ top: '2px', left: '-1px', position: 'relative' }}
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M21.752 7.592c0-2.386-1.93-4.316-4.316-4.316-1.31 0-2.617.617-3.436 1.617-.82-1-2.127-1.617-3.436-1.617-2.386 0-4.316 1.93-4.316 4.316 0 4.09 7.752 9.408 7.752 9.408s7.752-5.318 7.752-9.408z" />
-                </svg>
-                {favoriteCount}
-              </button>
+            )}
+
+            {/* Ingredients Section */}
+            <div className="p-6 border-b border-cream-200">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-xl bg-mint/30 flex items-center justify-center">
+                  <span className="text-xl">🥗</span>
+                </div>
+                <h2 className="font-display text-xl font-bold text-cocoa">Ingredientes</h2>
+              </div>
+
+              <ul className="space-y-3">
+                {recipe.ingredients.map((ing, idx) => (
+                  <li key={idx} className="flex items-start gap-3 group">
+                    <div className="w-6 h-6 rounded-full bg-forest/10 flex items-center justify-center flex-shrink-0 mt-0.5
+                      group-hover:bg-forest group-hover:text-white transition-colors duration-200">
+                      <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                    <span className="font-body text-cocoa">{ing}</span>
+                  </li>
+                ))}
+              </ul>
             </div>
-          )}
-          <h2 className="text-xl font-semibold mb-2 text-pantonegreen">Ingredientes</h2>
-          <ul className="list-disc list-inside mb-4 pl-4">
-            {recipe.ingredients.map((ing, idx) => (
-              <li key={idx} className="mb-1">{ing}</li>
-            ))}
-          </ul>
-          <h2 className="text-xl font-semibold mb-2 text-pantonegreen">Pasos</h2>
-          {loading ? (
-            <p className="text-gray-500">Cargando pasos...</p>
-          ) : steps.length === 0 ? (
-            <p className="text-gray-500">No hay pasos para esta receta.</p>
-          ) : (
-            <ol className="space-y-6 mb-4">
-              {steps.map((step, idx) => (
-                <li key={step.id} className="flex items-start gap-4 border-l-4 border-pantonegreen pl-4 pb-2">
-                  {step.imageUrl && (
-                    <img src={step.imageUrl} alt={`Paso ${idx + 1}`} className="w-20 h-20 object-cover rounded shadow" />
-                  )}
-                  <div>
-                    <h3 className="font-bold text-lg text-pantonegreen mb-1">Paso {idx + 1}: {step.title}</h3>
-                    <p className="text-gray-800 whitespace-pre-line">{step.description}</p>
-                  </div>
-                </li>
-              ))}
-            </ol>
-          )}
+
+            {/* Steps Section */}
+            <div className="p-6">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 rounded-xl bg-tangerine-50 flex items-center justify-center">
+                  <span className="text-xl">👨‍🍳</span>
+                </div>
+                <h2 className="font-display text-xl font-bold text-cocoa">Preparación</h2>
+              </div>
+
+              {loading ? (
+                <div className="flex justify-center py-8">
+                  <LoadingSpinner text="Cargando pasos..." />
+                </div>
+              ) : steps.length === 0 ? (
+                <div className="text-center py-8 bg-cream-100 rounded-2xl">
+                  <span className="text-4xl mb-2 block">📝</span>
+                  <p className="font-body text-cocoa-light">No hay pasos para esta receta</p>
+                </div>
+              ) : (
+                <div className="space-y-8">
+                  {steps.map((step, idx) => (
+                    <div key={step.id} className="relative flex gap-4 lg:gap-6 animate-fade-in-up"
+                      style={{ animationDelay: `${idx * 0.1}s` }}>
+                      {/* Step Number */}
+                      <div className="flex-shrink-0">
+                        <div className="w-12 h-12 rounded-2xl bg-gradient-forest flex items-center justify-center
+                          font-display font-bold text-white text-lg shadow-soft">
+                          {idx + 1}
+                        </div>
+                        {/* Connecting Line */}
+                        {idx < steps.length - 1 && (
+                          <div className="w-0.5 h-full bg-forest/20 absolute left-6 top-14 -translate-x-1/2" />
+                        )}
+                      </div>
+
+                      {/* Step Content */}
+                      <div className="flex-1 pb-4">
+                        <h3 className="font-display font-bold text-lg text-cocoa mb-2">
+                          {step.title}
+                        </h3>
+                        <p className="font-body text-cocoa-light leading-relaxed whitespace-pre-line">
+                          {step.description}
+                        </p>
+
+                        {/* Step Image */}
+                        {step.imageUrl && (
+                          <div className="mt-4 rounded-2xl overflow-hidden shadow-soft">
+                            <img
+                              src={step.imageUrl}
+                              alt={`Paso ${idx + 1}`}
+                              className="w-full h-48 object-cover"
+                            />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="p-6 bg-cream-100 border-t border-cream-200">
+              <div className="flex items-center justify-between">
+                <span className="font-handwritten text-cocoa-light text-lg">
+                  ¡Buen provecho! 🍽️
+                </span>
+
+                {user && (
+                  <button
+                    onClick={handleToggleFavorite}
+                    disabled={loadingFav}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-full font-display font-semibold text-sm
+                      transition-all duration-300
+                      ${isFavorite
+                        ? 'bg-tangerine text-white'
+                        : 'bg-white text-tangerine border-2 border-tangerine/30 hover:border-tangerine'
+                      }`}
+                  >
+                    <HeartIcon className="w-4 h-4" filled={isFavorite} />
+                    {isFavorite ? 'En favoritos' : 'Guardar'}
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
+      </section>
+
+      {/* Bottom Spacing */}
+      <div className="h-8 bg-cream" />
     </div>
   );
 }
