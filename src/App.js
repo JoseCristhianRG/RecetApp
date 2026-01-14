@@ -20,6 +20,8 @@ import UserProfilePage from './pages/UserProfilePage';
 import { db } from './firebase';
 import { doc, getDoc } from 'firebase/firestore';
 import BottomNavBar from './components/BottomNavBar';
+import { PlusIcon } from './components/icons';
+import { LoadingSpinner } from './components/ui';
 
 function App() {
   const { user, signout, userRole } = useContext(AuthContext);
@@ -125,11 +127,11 @@ function App() {
             {user && !location.pathname.startsWith('/add') && !location.pathname.startsWith('/edit-recipe') && (
               <button
                 onClick={() => navigate('/add')}
-                className="fixed bottom-20 right-5 z-50 bg-white border-4 border-pantoneorange text-pantoneorange rounded-full shadow-lg w-16 h-16 flex items-center justify-center transition hover:bg-pantoneyellow hover:text-pantoneblack"
+                className="fixed bottom-20 right-5 z-50 bg-pantonegreen text-white rounded-full shadow-lg w-14 h-14 flex items-center justify-center transition-all duration-200 hover:bg-primary-dark hover:scale-110"
                 title="Añadir receta"
                 style={{ boxShadow: '0 4px 16px rgba(0,0,0,0.18)' }}
               >
-                <img src={require('./images/icono_add_receta.png')} alt="Añadir receta" className="w-10 h-10" />
+                <PlusIcon className="w-8 h-8" />
               </button>
             )}
           </div>
@@ -155,7 +157,7 @@ function AdminRoute({ children }) {
       });
     });
   }, [user]);
-  if (loading) return <div>Cargando...</div>;
+  if (loading) return <div className="p-6 flex justify-center"><LoadingSpinner text="Cargando..." /></div>;
   if (role !== 'admin') return <Navigate to="/" replace />;
   
   return children;

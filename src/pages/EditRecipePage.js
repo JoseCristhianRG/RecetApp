@@ -10,6 +10,7 @@ import { Switch } from '@headlessui/react';
 import { uploadImage } from '../firebase';
 import RecipeForm from '../components/RecipeForm';
 import Modal from '../components/Modal';
+import { LoadingSpinner } from '../components/ui';
 
 // Componente para editar una receta existente
 function EditRecipePage() {
@@ -123,7 +124,13 @@ function EditRecipePage() {
     setLoading(false);
   };
 
-  if (loading || !name) return <div>Cargando...</div>;
+  if (loading || !name) {
+    return (
+      <div className="p-6 flex justify-center items-center min-h-[50vh]">
+        <LoadingSpinner size="lg" text="Cargando receta..." />
+      </div>
+    );
+  }
 
   const initialValues = {
     name,

@@ -25,7 +25,7 @@ function LoginPage() {
 
   return (
     // Layout principal del formulario de login
-    <div className="p-6 py-3">
+    <div className="p-6 py-3 animate-fade-in">
       <div className="max-w-md md:max-w-2xl xl:max-w-4xl mx-auto">
         <h1 className="text-2xl font-bold mb-4">Iniciar sesión</h1>
         <div className="mt-4 flex flex-col items-center">
@@ -60,7 +60,7 @@ function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full p-2 border rounded"
+              className="input"
             />
           </div>
           {/* Campo para la contraseña */}
@@ -71,20 +71,20 @@ function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="w-full p-2 border rounded"
+              className="input"
             />
           </div>
           {/* Botón para enviar el formulario */}
           <button
             type="submit"
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            className="btn-primary"
           >
             Iniciar sesión
           </button>
         </form>
         {/* Enlace para registrarse si no tiene cuenta */}
         <p className="mt-4 text-sm">
-          ¿No tienes cuenta? <Link to="/signup" className="text-blue-600 hover:underline">Registrarse</Link>
+          ¿No tienes cuenta? <Link to="/signup" className="text-pantonegreen hover:text-pantonebrown font-medium">Registrarse</Link>
         </p>
       </div>
     </div>

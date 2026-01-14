@@ -104,15 +104,15 @@ function UserProfilePage() {
         <form onSubmit={handleSubmit} className="space-y-5 w-full max-w-md mx-auto">
           <div>
             <label className="block text-gray-700 font-semibold mb-1">Email</label>
-            <input type="email" value={user.email} disabled className="w-full border rounded px-3 py-2 bg-gray-100" />
+            <input type="email" value={user.email} disabled className="input bg-gray-100" />
           </div>
           <div>
             <label className="block text-gray-700 font-semibold mb-1">Nombre</label>
-            <input type="text" value={displayName} onChange={e => setDisplayName(e.target.value)} className="w-full border rounded px-3 py-2" />
+            <input type="text" value={displayName} onChange={e => setDisplayName(e.target.value)} className="input" />
           </div>
           {error && <div className="text-red-600 text-sm">{error}</div>}
           {success && <div className="text-green-600 text-sm">¡Perfil actualizado!</div>}
-          <button type="submit" disabled={saving} className="w-full bg-pantonegreen text-white py-2 rounded font-bold hover:bg-green-700 transition">
+          <button type="submit" disabled={saving} className="w-full bg-pantonegreen text-white py-2 rounded-lg font-bold hover:bg-primary-dark transition disabled:opacity-50">
             {saving ? 'Guardando...' : 'Guardar cambios'}
           </button>
         </form>

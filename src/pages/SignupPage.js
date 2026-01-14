@@ -52,7 +52,7 @@ function SignupPage() {
 
   return (
     // Layout principal del formulario de registro
-    <div className="p-6 py-3">
+    <div className="p-6 py-3 animate-fade-in">
       <div className="max-w-md md:max-w-2xl xl:max-w-4xl mx-auto bg-white p-3 rounded">
         <h1 className="text-2xl font-bold mb-4">Registrarse</h1>
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -63,7 +63,7 @@ function SignupPage() {
               value={displayName}
               onChange={e => setDisplayName(e.target.value)}
               required
-              className="w-full p-2 border rounded"
+              className="input"
               placeholder="Tu nombre"
             />
           </div>
@@ -74,7 +74,7 @@ function SignupPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full p-2 border rounded"
+              className="input"
             />
           </div>
           <div>
@@ -84,7 +84,7 @@ function SignupPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="w-full p-2 border rounded"
+              className="input"
             />
           </div>
           <div>
@@ -94,21 +94,21 @@ function SignupPage() {
               value={confirmPassword}
               onChange={e => setConfirmPassword(e.target.value)}
               required
-              className="w-full p-2 border rounded"
+              className="input"
             />
           </div>
           {error && <div className="text-red-600 text-sm">{error}</div>}
           {/* Botón para enviar el formulario */}
           <button
             type="submit"
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            className="btn-primary"
           >
             Registrarse
           </button>
         </form>
         {/* Enlace para iniciar sesión si ya tiene cuenta */}
         <p className="mt-4 text-sm">
-          ¿Ya tienes cuenta? <Link to="/login" className="text-blue-600 hover:underline">Iniciar sesión</Link>
+          ¿Ya tienes cuenta? <Link to="/login" className="text-pantonegreen hover:text-pantonebrown font-medium">Iniciar sesión</Link>
         </p>
       </div>
     </div>
