@@ -72,7 +72,6 @@ export function AuthProvider({ children }) {
 
 // Component to require authentication for routes
 export function RequireAuth({ children, requiredRole }) {
-  console.log('RequireAuth', { requiredRole });
   const { user, userRole } = useContext(AuthContext);
   // Check if user is authenticated
   if (!user) {

@@ -3,64 +3,116 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     // ============================================
+    // HELPER FUNCTIONS
+    // ============================================
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isAuthenticated()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    // ============================================
     // RECIPES - Public read, authenticated write
     // ============================================
     match /recipes/{recipeId} {
       // Anyone can read public recipes
       // Authenticated users can read all (including their private ones)
       allow read: if resource.data.isPublic == true
-                  || request.auth != null;
+                  || isAuthenticated();
 
       // Only authenticated users can create
-      allow create: if request.auth != null;
+      allow create: if isAuthenticated()
+                    && request.resource.data.createdBy == request.auth.uid;
 
       // Only the creator can update/delete their recipes
-      allow update, delete: if request.auth != null
-                            && request.auth.uid == resource.data.createdBy;
+      // Prevent changing createdBy field
+      allow update: if isAuthenticated()
+                    && request.auth.uid == resource.data.createdBy
+                    && request.resource.data.createdBy == resource.data.createdBy;
+
+      allow delete: if isAuthenticated()
+                    && request.auth.uid == resource.data.createdBy;
     }
 
     // ============================================
-    // STEPS - Follow recipe permissions
+    // STEPS - Only recipe owner can modify
     // ============================================
     match /steps/{stepId} {
       allow read: if true;
-      allow create: if request.auth != null;
-      allow update, delete: if request.auth != null;
+
+      // Only allow create/update/delete if user owns the recipe
+      allow create: if isAuthenticated()
+                    && exists(/databases/$(database)/documents/recipes/$(request.resource.data.recipeId))
+                    && get(/databases/$(database)/documents/recipes/$(request.resource.data.recipeId)).data.createdBy == request.auth.uid;
+
+      allow update, delete: if isAuthenticated()
+                            && exists(/databases/$(database)/documents/recipes/$(resource.data.recipeId))
+                            && get(/databases/$(database)/documents/recipes/$(resource.data.recipeId)).data.createdBy == request.auth.uid;
     }
 
     // ============================================
-    // CATEGORIES - Public read, admin write
+    // CATEGORIES - Public read, admin-only write
     // ============================================
     match /categories/{categoryId} {
       allow read: if true;
-      allow write: if request.auth != null;
+      allow write: if isAdmin();
     }
 
     // ============================================
-    // USERS - Public read profile, private write
+    // USERS - Public read profile, restricted write
     // ============================================
     match /users/{userId} {
       // Anyone can read basic profile info
       allow read: if true;
 
-      // Only the user can write their own profile
-      allow write: if request.auth != null
-                   && request.auth.uid == userId;
+      // Users can create their own profile (on signup)
+      allow create: if isOwner(userId)
+                    && request.resource.data.role == 'user';
+
+      // Users can update their own profile, but NOT change their role
+      // Only admins can change roles
+      allow update: if isOwner(userId)
+                    && request.resource.data.role == resource.data.role
+                    || isAdmin();
+
+      // Only admins can delete user profiles
+      allow delete: if isAdmin();
     }
 
     // ============================================
     // FAVORITES - Private to each user
     // ============================================
     match /favorites/{favoriteId} {
-      allow read, write: if request.auth != null;
+      // Users can only read their own favorites
+      allow read: if isAuthenticated()
+                  && resource.data.userId == request.auth.uid;
+
+      // Users can only create favorites for themselves
+      allow create: if isAuthenticated()
+                    && request.resource.data.userId == request.auth.uid;
+
+      // Users can only delete their own favorites
+      allow delete: if isAuthenticated()
+                    && resource.data.userId == request.auth.uid;
+
+      // No updates allowed on favorites
+      allow update: if false;
     }
 
     // ============================================
-    // INGREDIENTS - Public read, authenticated write
+    // INGREDIENTS - Public read, admin write
     // ============================================
     match /ingredients/{ingredientId} {
       allow read: if true;
-      allow write: if request.auth != null;
+      allow write: if isAdmin();
     }
 
     // ============================================
@@ -68,13 +120,25 @@ service cloud.firestore {
     // ============================================
     match /reviews/{reviewId} {
       allow read: if true;
-      allow create: if request.auth != null
+
+      // Users can only create reviews for themselves with valid rating
+      allow create: if isAuthenticated()
                     && request.resource.data.userId == request.auth.uid
                     && request.resource.data.rating >= 1
+                    && request.resource.data.rating <= 5
+                    && request.resource.data.recipeId is string
+                    && request.resource.data.recipeId.size() > 0;
+
+      // Users can only update their own reviews, cannot change recipeId or userId
+      allow update: if isAuthenticated()
+                    && request.auth.uid == resource.data.userId
+                    && request.resource.data.userId == resource.data.userId
+                    && request.resource.data.recipeId == resource.data.recipeId
+                    && request.resource.data.rating >= 1
                     && request.resource.data.rating <= 5;
-      allow update: if request.auth != null
-                    && request.auth.uid == resource.data.userId;
-      allow delete: if request.auth != null
+
+      // Users can only delete their own reviews
+      allow delete: if isAuthenticated()
                     && request.auth.uid == resource.data.userId;
     }
   }
