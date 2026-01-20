@@ -42,38 +42,35 @@ Una aplicación web moderna para descubrir, crear y compartir recetas de cocina.
 La página principal muestra todas las recetas públicas con opciones de filtrado por categoría.
 
 <div align="center">
-  <img src="public/assets/screenshots/home.png" alt="Página de Inicio" width="800"/>
+  <img src="public/assets/screenshots/home.png" alt="Página de Inicio" width="300"/>
 </div>
 
 ### Detalle de Receta
 Vista completa de una receta con ingredientes, pasos de preparación y sección de valoraciones.
 
 <div align="center">
-  <img src="public/assets/screenshots/recipe-detail.png" alt="Detalle de Receta" width="800"/>
+  <img src="public/assets/screenshots/recipe-detail.png" alt="Detalle de Receta" width="300"/>
 </div>
-
-### Sistema de Valoraciones
-Los usuarios pueden calificar recetas y dejar comentarios.
 
 ### Crear Receta
 Formulario por pasos para agregar nuevas recetas.
 
 <div align="center">
-  <img src="public/assets/screenshots/add-recipe.png" alt="Crear Receta" width="800"/>
+  <img src="public/assets/screenshots/add-recipe.png" alt="Crear Receta" width="300"/>
 </div>
 
 ### Mis Recetas
 Panel para gestionar las recetas creadas por el usuario.
 
 <div align="center">
-  <img src="public/assets/screenshots/my-recipes.png" alt="Mis Recetas" width="800"/>
+  <img src="public/assets/screenshots/my-recipes.png" alt="Mis Recetas" width="300"/>
 </div>
 
 ### Favoritos
 Colección de recetas guardadas como favoritas.
 
 <div align="center">
-  <img src="public/assets/screenshots/favorites.png" alt="Favoritos" width="800"/>
+  <img src="public/assets/screenshots/favorites.png" alt="Favoritos" width="300"/>
 </div>
 
 ### Autenticación
