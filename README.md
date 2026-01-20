@@ -77,7 +77,7 @@ Colección de recetas guardadas como favoritas.
 Páginas de inicio de sesión y registro.
 
 <div align="center">
-  <img src="public/assets/screenshots/login.png" alt="Login" width="400"/>
+  <img src="public/assets/screenshots/login.PNG" alt="Login" width="400"/>
 </div>
 
 ---
