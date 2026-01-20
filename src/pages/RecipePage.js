@@ -4,8 +4,10 @@ import { RecipesContext } from '../RecipesContext';
 import { db } from '../firebase';
 import { collection, query, where, getDocs, orderBy, addDoc, deleteDoc } from 'firebase/firestore';
 import { AuthContext } from '../AuthContext';
-import { HeartIcon, PencilIcon } from '../components/icons';
+import { HeartIcon, PencilIcon, StarIcon } from '../components/icons';
 import { LoadingSpinner } from '../components/ui';
+import { ReviewForm, ReviewList, ReviewSummary } from '../components/reviews';
+import { useReviews } from '../ReviewsContext';
 
 // Image Zoom Modal Component
 function ImageZoomModal({ isOpen, imageUrl, alt, onClose }) {
@@ -91,12 +93,14 @@ function RecipePage() {
   const [steps, setSteps] = useState([]);
   const [loading, setLoading] = useState(true);
   const { user } = useContext(AuthContext);
+  const { getUserReview } = useReviews();
   const recipe = recipes.find((r) => r.id === recipeId);
   const [favoriteCount, setFavoriteCount] = useState(0);
   const [isFavorite, setIsFavorite] = useState(false);
   const [loadingFav, setLoadingFav] = useState(false);
   const [zoomImage, setZoomImage] = useState({ isOpen: false, url: '', alt: '' });
   const navigate = useNavigate();
+  const userReview = getUserReview(recipeId);
 
   useEffect(() => {
     async function fetchSteps() {
@@ -283,12 +287,22 @@ function RecipePage() {
                 {recipe.name}
               </h1>
 
-              {/* Favorite Count */}
-              <div className="flex items-center gap-2 text-white/90">
-                <HeartIcon className="w-5 h-5 text-tangerine-light" filled />
-                <span className="font-body text-sm">
-                  {favoriteCount} {favoriteCount === 1 ? 'persona' : 'personas'} ama esta receta
-                </span>
+              {/* Rating and Favorite Count */}
+              <div className="flex items-center gap-4 flex-wrap">
+                {recipe.averageRating > 0 && (
+                  <div className="flex items-center gap-2 text-white/90">
+                    <StarIcon className="w-5 h-5 text-honey" filled />
+                    <span className="font-body text-sm">
+                      {recipe.averageRating.toFixed(1)} ({recipe.totalReviews || 0} {(recipe.totalReviews || 0) === 1 ? 'valoración' : 'valoraciones'})
+                    </span>
+                  </div>
+                )}
+                <div className="flex items-center gap-2 text-white/90">
+                  <HeartIcon className="w-5 h-5 text-tangerine-light" filled />
+                  <span className="font-body text-sm">
+                    {favoriteCount} {favoriteCount === 1 ? 'persona' : 'personas'} ama esta receta
+                  </span>
+                </div>
               </div>
             </div>
           </div>
@@ -433,6 +447,35 @@ function RecipePage() {
                   </button>
                 )}
               </div>
+            </div>
+
+            {/* Reviews Section */}
+            <div className="p-6 border-t border-cream-200">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 rounded-xl bg-honey/30 flex items-center justify-center">
+                  <StarIcon className="w-5 h-5 text-honey" filled />
+                </div>
+                <div>
+                  <h2 className="font-display text-xl font-bold text-cocoa">Valoraciones</h2>
+                  {recipe.averageRating > 0 && (
+                    <ReviewSummary
+                      averageRating={recipe.averageRating || 0}
+                      totalReviews={recipe.totalReviews || 0}
+                      className="mt-1"
+                    />
+                  )}
+                </div>
+              </div>
+
+              {/* Review Form - Only show if user is logged in and hasn't reviewed yet */}
+              {user && !userReview && (
+                <div className="mb-6">
+                  <ReviewForm recipeId={recipeId} />
+                </div>
+              )}
+
+              {/* Reviews List */}
+              <ReviewList recipeId={recipeId} />
             </div>
           </div>
         </div>

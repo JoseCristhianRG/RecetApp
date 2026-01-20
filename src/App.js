@@ -11,6 +11,7 @@ import EditRecipePage from './pages/EditRecipePage';
 import { RecipesProvider } from './RecipesContext';
 import { CategoriesProvider } from './CategoriesContext';
 import { IngredientsProvider } from './IngredientsContext';
+import { ReviewsProvider } from './ReviewsContext';
 import { AuthContext, RequireAuth } from './AuthContext';
 import LoginPage from './pages/LoginPage';
 import { Navigate } from 'react-router-dom';
@@ -69,6 +70,7 @@ function App() {
     <CategoriesProvider>
       <IngredientsProvider>
         <RecipesProvider>
+          <ReviewsProvider>
           <div className="min-h-screen">
             {/* Fresh Modern Header */}
             <header className="glass sticky top-0 z-30 border-b border-white/50">
@@ -209,6 +211,7 @@ function App() {
               </button>
             )}
           </div>
+          </ReviewsProvider>
         </RecipesProvider>
       </IngredientsProvider>
     </CategoriesProvider>

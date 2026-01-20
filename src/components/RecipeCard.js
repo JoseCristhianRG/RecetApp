@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { AuthContext } from '../AuthContext';
 import { db } from '../firebase';
 import { collection, query, where, getDocs, addDoc, deleteDoc } from 'firebase/firestore';
-import { HeartIcon } from './icons';
+import { HeartIcon, StarIcon } from './icons';
 
 function RecipeCard({ recipe }) {
   const { user } = useContext(AuthContext);
@@ -114,6 +114,19 @@ function RecipeCard({ recipe }) {
           <h3 className="font-display font-bold text-lg text-cocoa line-clamp-2 mb-2 group-hover:text-forest transition-colors duration-200">
             {recipe.name}
           </h3>
+
+          {/* Rating */}
+          {recipe.averageRating > 0 && (
+            <div className="flex items-center gap-1.5 mb-2">
+              <StarIcon className="w-4 h-4 text-honey" filled />
+              <span className="font-display font-semibold text-sm text-cocoa">
+                {recipe.averageRating.toFixed(1)}
+              </span>
+              <span className="text-cocoa-lighter text-xs">
+                ({recipe.totalReviews || 0})
+              </span>
+            </div>
+          )}
 
           {/* Tags */}
           {recipe.tags && recipe.tags.length > 0 && (
