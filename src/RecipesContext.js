@@ -36,12 +36,13 @@ export function RecipesProvider({ children }) {
 
     const q = query(
       collection(db, 'recipes'),
-      where('createdBy', '==', user.uid),
-      orderBy('name')
+      where('createdBy', '==', user.uid)
     );
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const recs = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
       setUserRecipes(recs);
+    }, (error) => {
+      console.error('Error fetching user recipes:', error);
     });
     return unsubscribe;
   }, [user]);
